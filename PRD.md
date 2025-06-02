@@ -1,5 +1,3 @@
-# carenet
-
 # Carenet 프론트엔드 Product Requirements Document (PRD)
 
 ## 1. 목적
@@ -86,6 +84,7 @@
 * 각 CCTV 썸네일에 상태 배지(정상/경고/위험)
 * 썸네일 클릭 시 모달로 1280×720 라이브 스트림 재생
 * Latency 목표: < 2초(웹RTC or HLS Low‑Latency)
+* CCTV는 계속해서 추가할 수 있고 지금은 public폴더에 있는 영상 다섯개를 띄어줘. 계속 추가할 수 있게 IP주소? RTSP같은 걸로 백엔드를 나중에 구현할껀데 지금은 계속 간단하게 추가할 수 있게 만들어줘
 
 ### 5.3 Event Detail
 
@@ -109,7 +108,6 @@
 
 ## 6. 컴포넌트 설계 가이드 컴포넌트 설계 가이드
 
-* shadcn/ui Card, Dialog, Button 우선 사용
 * KPI 카드: `Card` + `Progress`(애니메이션)
 * 차트: `recharts` LineChart, BarChart
 * 테이블: AntD Table + 서버사이드 Pagination
@@ -120,25 +118,6 @@
 * 프레임 진입 시 Framer Motion `fade‑in(up)`
 * KPI 카드 수치 변화 시 카운트‑업 애니메이션
 * Event Detail 클립 로딩 스켈레톤 제공
-
-## 8. API 계약(초안)
-
-| 메서드   | 엔드포인트                                              | 설명               |
-| ----- | -------------------------------------------------- | ---------------- |
-| GET   | `/api/hospitals`                                   | (슈퍼) 병원 목록 조회    |
-| POST  | `/api/hospitals`                                   | 병원 생성            |
-| GET   | `/api/hospitals/:id`                               | 병원 상세            |
-| PATCH | `/api/hospitals/:id`                               | 병원 정보 수정/활성화     |
-| GET   | `/api/events?hospital_id=&type=&status=&from=&to=` | 이벤트 목록 (테넌트 스코프) |
-| GET   | `/api/events/:id`                                  | 단일 이벤트           |
-| PATCH | `/api/events/:id/status`                           | 이벤트 확인 상태 변경     |
-| GET   | `/api/cctv/streams?hospital_id=&floor=`            | CCTV 스트림 URL     |
-| POST  | `/api/admin/users/approve`                         | (병원) 가입 승인       |
-| GET   | `/api/admin/users?hospital_id=`                    | 병원 사용자 목록        |
-| GET   | `/api/metadata/beds?hospital_id=`                  | 침대 메타            |
-| PUT   | `/api/metadata/beds/:id`                           | 침대 메타 업데이트       |
-
-**보안**: 모든 요청은 JWT Bearer 토큰 필요, 토큰 클레임에 `hospital_id`와 `role` 포함.
 
 ## 9. 성능 & 품질 기준 성능 & 품질 기준
 
@@ -163,12 +142,15 @@
 | M4 Admin 기능                 | 주차 9–10  | 계정 승인, 병상 메타 관리                      |
 | M5 QA · 배포                  | 주차 11–12 | 테스트 통과, Vercel/내부 서버 배포              |
 
-## 12. 오픈 이슈
+## 기술스택
 
-1. 야간 IR 센서 미지원 → 이미지 품질 저하 시 처리 방안
-2. 침대 폴리곤 좌표 수기 등록 UX 개선 필요
-3. 장기 보존용 이벤트 클립 스토리지 비용 추정
-
----
-
-본 PRD는 2025‑05‑31 기준 초안이다. 추가 피드백에 따라 세부 항목을 보완한다.
+* pnpm 사용
+* **프레임워크**: Next.js (React 기반 SPA)
+* **UI/스타일**: TailwindCSS, Ant Design(antd), tailwind-merge, lucide
+* UI 우선순위: tailwindcss > andt
+* 프로바이더는 무조건 tailwindcss이고 andt ui components들은 전부 tailwind 유틸리티 클래스로 작성할 수 있게
+* 레이아웃은 tailwind css로 grid layout으로 적용함
+* **3D 뷰어**: Viser/Three.js WebGL 렌더링
+* **API 연동**: React-Query
+* 상태 관리는 zustand
+* **기타**: React-Konva, Fabric.js, rechart, toast
