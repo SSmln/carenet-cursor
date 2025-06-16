@@ -3,6 +3,11 @@ description:
 globs: 
 alwaysApply: true
 ---
+---
+description: 
+globs: 
+alwaysApply: true
+---
 # 구현 작업 원칙
 * 비즈니스 로직 구현 작업은 반드시 테스트를 먼저 작성하고 구현하세요.
 * SOLID 원칙을 사용해서 구현하세요.

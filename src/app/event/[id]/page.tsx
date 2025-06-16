@@ -2,8 +2,12 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Card, Button, Tag, Space, Image, Descriptions, Modal, message } from 'antd';
-import { PlayCircleOutlined, CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Toaster, toast } from 'sonner';
+import { IoPlayCircleOutline, IoCheckmarkCircleOutline, IoWarningOutline } from 'react-icons/io5';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { MOCK_EVENTS } from '@/constants/mock-data';
 import { Event } from '@/types';
@@ -16,17 +20,17 @@ export default function EventDetailPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedSnapshot, setSelectedSnapshot] = useState<string | null>(null);
 
-  useEffect(() => {
-    // 실제로는 API 호출로 이벤트 상세 정보를 가져올 곳
-    const eventId = params.id as string;
-    const foundEvent = MOCK_EVENTS.find(e => e.id === eventId);
-    if (foundEvent) {
-      setEvent(foundEvent);
-    } else {
-      message.error('이벤트를 찾을 수 없습니다.');
-      router.back();
-    }
-  }, [params.id, router]);
+  // useEffect(() => {
+  //   // 실제로는 API 호출로 이벤트 상세 정보를 가져올 곳
+  //   const eventId = params.id as string;
+  //   const foundEvent = MOCK_EVENTS.find(e => e.id === eventId);
+  //   if (foundEvent) {
+  //     setEvent(foundEvent);
+  //   } else {
+  //     toast.error('이벤트를 찾을 수 없습니다.');
+  //     router.back();
+  //   }
+  // }, [params.id, router]);
 
   const handleVideoToggle = () => {
     if (videoRef.current) {
@@ -42,7 +46,7 @@ export default function EventDetailPage() {
   const handleStatusUpdate = (newStatus: Event['status']) => {
     if (event) {
       setEvent({ ...event, status: newStatus });
-      message.success(`이벤트 상태가 ${newStatus === 'read' ? '확인됨' : '해결됨'}으로 변경되었습니다.`);
+      toast.success(`이벤트 상태가 ${newStatus === 'read' ? '확인됨' : '해결됨'}으로 변경되었습니다.`);
     }
   };
 
@@ -53,6 +57,25 @@ export default function EventDetailPage() {
       case 'medium': return 'gold';
       case 'low': return 'green';
       default: return 'blue';
+    }
+  };
+
+  const getSeverityBadgeVariant = (severity: Event['severity']) => {
+    switch (severity) {
+      case 'critical': return 'bg-red-500 text-white';
+      case 'high': return 'bg-orange-500 text-white';
+      case 'medium': return 'bg-amber-500 text-white';
+      case 'low': return 'bg-green-500 text-white';
+      default: return 'bg-blue-500 text-white';
+    }
+  };
+
+  const getStatusBadgeVariant = (status: Event['status']) => {
+    switch (status) {
+      case 'unread': return 'bg-red-500 text-white';
+      case 'read': return 'bg-orange-500 text-white';
+      case 'resolved': return 'bg-green-500 text-white';
+      default: return 'bg-blue-500 text-white';
     }
   };
 
@@ -76,6 +99,7 @@ export default function EventDetailPage() {
         <div className="flex justify-center items-center h-64">
           <div>로딩 중...</div>
         </div>
+        <Toaster />
       </DashboardLayout>
     );
   }
@@ -84,74 +108,80 @@ export default function EventDetailPage() {
     <DashboardLayout title="이벤트 상세">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* 이벤트 정보 카드 */}
-        <Card title="이벤트 정보">
-          <Descriptions column={1} size="small">
-            <Descriptions.Item label="유형">
-              <Tag color={getSeverityColor(event.severity)}>
+        <Card className="p-4">
+          <h2 className="text-xl font-semibold mb-4">이벤트 정보</h2>
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center">
+              <span className="font-medium w-24">유형:</span>
+              <Badge className={getSeverityBadgeVariant(event.severity)}>
                 {getEventTypeLabel(event.type)}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="발생 시간">
-              {new Date(event.timestamp).toLocaleString('ko-KR')}
-            </Descriptions.Item>
-            <Descriptions.Item label="위치">
-              {event.roomNumber}호 {event.bedNumber}번 침대
-            </Descriptions.Item>
-            <Descriptions.Item label="환자">
-              {event.patientName || '알 수 없음'}
-            </Descriptions.Item>
-            <Descriptions.Item label="심각도">
-              <Tag color={getSeverityColor(event.severity)}>
+              </Badge>
+            </div>
+            <div className="flex items-center">
+              <span className="font-medium w-24">발생 시간:</span>
+              <span>{new Date(event.timestamp).toLocaleString('ko-KR')}</span>
+            </div>
+            <div className="flex items-center">
+              <span className="font-medium w-24">위치:</span>
+              <span>{event.roomNumber}호 {event.bedNumber}번 침대</span>
+            </div>
+            <div className="flex items-center">
+              <span className="font-medium w-24">환자:</span>
+              <span>{event.patientName || '알 수 없음'}</span>
+            </div>
+            <div className="flex items-center">
+              <span className="font-medium w-24">심각도:</span>
+              <Badge className={getSeverityBadgeVariant(event.severity)}>
                 {event.severity === 'critical' ? '치명적' :
                  event.severity === 'high' ? '높음' :
                  event.severity === 'medium' ? '보통' : '낮음'}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="신뢰도">
-              {event.confidence}%
-            </Descriptions.Item>
-            <Descriptions.Item label="상태">
-              <Tag color={event.status === 'unread' ? 'red' : event.status === 'read' ? 'orange' : 'green'}>
+              </Badge>
+            </div>
+            <div className="flex items-center">
+              <span className="font-medium w-24">신뢰도:</span>
+              <span>{event.confidence}%</span>
+            </div>
+            <div className="flex items-center">
+              <span className="font-medium w-24">상태:</span>
+              <Badge className={getStatusBadgeVariant(event.status)}>
                 {event.status === 'unread' ? '미확인' : 
                  event.status === 'read' ? '확인' : '해결'}
-              </Tag>
-            </Descriptions.Item>
+              </Badge>
+            </div>
             {event.description && (
-              <Descriptions.Item label="설명">
-                {event.description}
-              </Descriptions.Item>
+              <div className="flex items-center">
+                <span className="font-medium w-24">설명:</span>
+                <span>{event.description}</span>
+              </div>
             )}
-          </Descriptions>
+          </div>
 
-          <div className="mt-4">
-            <Space>
-              {event.status === 'unread' && (
-                <Button
-                  type="primary"
-                  icon={<CheckCircleOutlined />}
-                  onClick={() => handleStatusUpdate('read')}
-                >
-                  확인
-                </Button>
-              )}
-              {event.status !== 'resolved' && (
-                <Button
-                  type="primary"
-                  icon={<ExclamationCircleOutlined />}
-                  onClick={() => handleStatusUpdate('resolved')}
-                >
-                  해결
-                </Button>
-              )}
-              <Button onClick={() => router.back()}>
-                뒤로 가기
+          <div className="mt-4 flex gap-4">
+            {event.status === 'unread' && (
+              <Button
+                onClick={() => handleStatusUpdate('read')}
+              >
+                <IoCheckmarkCircleOutline className="mr-2 h-4 w-4" />
+                확인
               </Button>
-            </Space>
+            )}
+            {event.status !== 'resolved' && (
+              <Button
+                onClick={() => handleStatusUpdate('resolved')}
+              >
+                <IoWarningOutline className="mr-2 h-4 w-4" />
+                해결
+              </Button>
+            )}
+            <Button variant="outline" onClick={() => router.back()}>
+              뒤로 가기
+            </Button>
           </div>
         </Card>
 
         {/* 영상 클립 카드 */}
-        <Card title="영상 클립">
+        <Card className="p-4">
+          <h2 className="text-xl font-semibold mb-4">영상 클립</h2>
           <div className="relative bg-black rounded-lg overflow-hidden">
             {event.videoUrl ? (
               <>
@@ -163,10 +193,9 @@ export default function EventDetailPage() {
                 />
                 <div className="absolute bottom-4 left-4">
                   <Button
-                    type="primary"
-                    icon={<PlayCircleOutlined />}
                     onClick={handleVideoToggle}
                   >
+                    <IoPlayCircleOutline className="mr-2 h-4 w-4" />
                     {isPlaying ? '일시정지' : '재생'}
                   </Button>
                 </div>
@@ -182,17 +211,14 @@ export default function EventDetailPage() {
 
       {/* 스냅샷 갤러리 */}
       {event.snapshotUrl && (
-        <Card title="스냅샷" className="mt-6">
+        <Card className="mt-6 p-4">
+          <h2 className="text-xl font-semibold mb-4">스냅샷</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="cursor-pointer">
-              <Image
+            <div className="cursor-pointer" onClick={() => setSelectedSnapshot(event.snapshotUrl!)}>
+              <img
                 src={event.snapshotUrl}
                 alt="이벤트 스냅샷"
-                className="rounded-lg"
-                preview={{
-                  visible: selectedSnapshot === event.snapshotUrl,
-                  onVisibleChange: (visible) => setSelectedSnapshot(visible ? event.snapshotUrl! : null),
-                }}
+                className="rounded-lg object-cover w-full h-full"
               />
             </div>
           </div>
@@ -201,40 +227,46 @@ export default function EventDetailPage() {
 
       {/* 이벤트 메타데이터 */}
       {event.metadata && (
-        <Card title="상세 정보" className="mt-6">
-          <Descriptions column={2} size="small">
+        <Card className="mt-6 p-4">
+          <h2 className="text-xl font-semibold mb-4">상세 정보</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             {event.metadata.algorithmVersion && (
-              <Descriptions.Item label="알고리즘 버전">
-                {event.metadata.algorithmVersion}
-              </Descriptions.Item>
+              <div className="flex items-center">
+                <span className="font-medium w-32">알고리즘 버전:</span>
+                <span>{event.metadata.algorithmVersion}</span>
+              </div>
             )}
             {event.metadata.processingTime && (
-              <Descriptions.Item label="처리 시간">
-                {event.metadata.processingTime}ms
-              </Descriptions.Item>
+              <div className="flex items-center">
+                <span className="font-medium w-32">처리 시간:</span>
+                <span>{event.metadata.processingTime}ms</span>
+              </div>
             )}
             {event.metadata.boundingBox && (
-              <Descriptions.Item label="감지 영역">
-                x: {event.metadata.boundingBox.x}, y: {event.metadata.boundingBox.y}, 
-                w: {event.metadata.boundingBox.width}, h: {event.metadata.boundingBox.height}
-              </Descriptions.Item>
+              <div className="flex items-center">
+                <span className="font-medium w-32">감지 영역:</span>
+                <span>
+                  x: {event.metadata.boundingBox.x}, y: {event.metadata.boundingBox.y}, 
+                  w: {event.metadata.boundingBox.width}, h: {event.metadata.boundingBox.height}
+                </span>
+              </div>
             )}
-          </Descriptions>
+          </div>
         </Card>
       )}
 
-      {/* 스냅샷 모달 */}
-      <Modal
-        open={!!selectedSnapshot}
-        footer={null}
-        onCancel={() => setSelectedSnapshot(null)}
-        centered
-        width={800}
-      >
-        {selectedSnapshot && (
-          <img src={selectedSnapshot} alt="Snapshot" className="w-full" />
-        )}
-      </Modal>
+      {/* 스냅샷 모달 (Shadcn Dialog) */}
+      <Dialog open={!!selectedSnapshot} onOpenChange={(open) => !open && setSelectedSnapshot(null)}>
+        <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden">
+          <DialogHeader className="p-4">
+            <DialogTitle>스냅샷</DialogTitle>
+          </DialogHeader>
+          {selectedSnapshot && (
+            <img src={selectedSnapshot} alt="Snapshot" className="w-full" />
+          )}
+        </DialogContent>
+      </Dialog>
+      <Toaster />
     </DashboardLayout>
   );
 } 

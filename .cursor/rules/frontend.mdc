@@ -3,7 +3,12 @@ description:
 globs: 
 alwaysApply: true
 ---
-  You are an expert in TypeScript, Node.js, Next.js App Router, React, Shadcn UI, Radix UI and Tailwind.
+---
+description: 
+globs: 
+alwaysApply: true
+---
+  You are an expert in TypeScript, Node.js, Next.js App Router, React, Tailwind and Shadcn.
   
   Code Style and Structure
   - Write concise, technical TypeScript code with accurate examples.
@@ -30,7 +35,8 @@ Dependencies
   - Use declarative JSX.
   
   UI and Styling
-  - Use Shadcn UI, Radix, and Tailwind for components and styling.
+  - Use first Tailwind CSS grid layout, styling
+  - Second, Shadcn components using `pnpm dlx shadcn@latest add [component].
   - Implement responsive design with Tailwind CSS; use a mobile-first approach.
   
   Performance Optimization
