@@ -1,48 +1,76 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { Card, Statistic, Table, Tag, Select, DatePicker, Button } from 'antd';
-import { FallOutlined, AimOutlined, EyeOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
-import { useRouter } from 'next/navigation';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import EventChart from '@/components/charts/EventChart';
-import { useDashboardStore } from '@/store/dashboard';
-import { MOCK_EVENTS, MOCK_DASHBOARD_STATS } from '@/constants/mock-data';
-import { Event } from '@/types';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { DateRange } from "react-day-picker";
+import { format } from "date-fns";
+import { ko } from 'date-fns/locale';
 
-const { RangePicker } = DatePicker;
+import {
+  IoBodyOutline,
+  IoBandageOutline,
+  IoEyeOutline,
+  IoAlertCircleOutline,
+  IoCalendarOutline
+} from "react-icons/io5";
+
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import EventChart from "@/components/charts/EventChart";
+import { useDashboardStore } from "@/store/dashboard";
+import { MOCK_EVENTS, MOCK_DASHBOARD_STATS } from "@/constants/mock-data";
+import { Event } from "@/types";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+
+const kpiCardData = [
+  { key: 'fallDetected', title: '낙상 감지', icon: IoBodyOutline, color: 'text-red-600' },
+  { key: 'fallPredicted', title: '낙상 예측', icon: IoBodyOutline, color: 'text-orange-500' },
+  { key: 'bedsoreDetected', title: '욕창 감지', icon: IoBandageOutline, color: 'text-red-600' },
+  { key: 'bedsorePredicted', title: '욕창 예측', icon: IoBandageOutline, color: 'text-orange-500' },
+  { key: 'curtainAlerts', title: '커튼 알림', icon: IoAlertCircleOutline, color: 'text-blue-500' },
+  { key: 'bedEmptyAlerts', title: '침대 비움', icon: IoAlertCircleOutline, color: 'text-purple-500' },
+  { key: 'totalActivePatients', title: '활성 환자', icon: IoEyeOutline, color: 'text-green-500' },
+  { key: 'activeCCTVs', title: '활성 CCTV', icon: IoEyeOutline, color: 'text-green-500' },
+] as const;
 
 export default function DashboardPage() {
   const router = useRouter();
   const { stats, events, setStats, setEvents } = useDashboardStore();
+  const [date, setDate] = useState<DateRange | undefined>();
 
   useEffect(() => {
-    // 실제로는 API 호출로 데이터를 가져올 곳
     setStats(MOCK_DASHBOARD_STATS);
     setEvents(MOCK_EVENTS);
   }, [setStats, setEvents]);
 
-  const getEventTypeLabel = (type: Event['type']) => {
-    const labels = {
-      fall_detected: '낙상 감지',
-      fall_predicted: '낙상 예측',
-      bedsore_detected: '욕창 감지',
-      bedsore_predicted: '욕창 예측',
-      curtain: '커튼',
-      bed_empty: '침대 비움',
-      bed_missing: '병상 없음',
-      rail_warning: '난간 주의',
+  const getEventTypeLabel = (type: Event["type"]) => {
+    const labels: Record<Event["type"], string> = {
+      fall_detected: "낙상 감지",
+      fall_predicted: "낙상 예측",
+      bedsore_detected: "욕창 감지",
+      bedsore_predicted: "욕창 예측",
+      curtain: "커튼",
+      bed_empty: "침대 비움",
+      bed_missing: "병상 없음",
+      rail_warning: "난간 주의",
     };
     return labels[type] || type;
   };
 
-  const getSeverityColor = (severity: Event['severity']) => {
+  const getSeverityBadgeVariant = (severity: Event["severity"]) => {
     switch (severity) {
-      case 'critical': return 'red';
-      case 'high': return 'orange';
-      case 'medium': return 'gold';
-      case 'low': return 'green';
-      default: return 'blue';
+      case "critical": return "destructive";
+      case "high": return "secondary"; // Use custom color for high
+      case "medium": return "default";
+      case "low": return "outline";
+      default: return "default";
     }
   };
 
@@ -52,212 +80,164 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout title="대시보드">
-      {/* KPI 카드 섹션 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card className="text-center">
-          <Statistic
-            title="낙상 감지"
-            value={stats?.fallDetected || 0}
-            valueStyle={{ color: '#cf1322' }}
-            prefix={<FallOutlined />}
-          />
-        </Card>
-        <Card className="text-center">
-          <Statistic
-            title="낙상 예측"
-            value={stats?.fallPredicted || 0}
-            valueStyle={{ color: '#fa8c16' }}
-            prefix={<FallOutlined />}
-          />
-        </Card>
-        <Card className="text-center">
-          <Statistic
-            title="욕창 감지"
-            value={stats?.bedsoreDetected || 0}
-            valueStyle={{ color: '#cf1322' }}
-            prefix={<AimOutlined />}
-          />
-        </Card>
-        <Card className="text-center">
-          <Statistic
-            title="욕창 예측"
-            value={stats?.bedsorePredicted || 0}
-            valueStyle={{ color: '#fa8c16' }}
-            prefix={<AimOutlined />}
-          />
-        </Card>
+        {kpiCardData.map(item => {
+          const Icon = item.icon;
+          return (
+            <Card key={item.key}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
+                <Icon className={`h-4 w-4 text-muted-foreground ${item.color}`} />
+              </CardHeader>
+              <CardContent>
+                <div className={`text-2xl font-bold ${item.color}`}>{stats?.[item.key] || 0}</div>
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
-      
-      {/* 추가 KPI 카드들 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card className="text-center">
-          <Statistic
-            title="커튼 알림"
-            value={stats?.curtainAlerts || 0}
-            valueStyle={{ color: '#1890ff' }}
-            prefix={<ExclamationCircleOutlined />}
-          />
-        </Card>
-        <Card className="text-center">
-          <Statistic
-            title="침대 비움"
-            value={stats?.bedEmptyAlerts || 0}
-            valueStyle={{ color: '#722ed1' }}
-            prefix={<ExclamationCircleOutlined />}
-          />
-        </Card>
-        <Card className="text-center">
-          <Statistic
-            title="활성 환자"
-            value={stats?.totalActivePatients || 0}
-            valueStyle={{ color: '#52c41a' }}
-            prefix={<EyeOutlined />}
-          />
-        </Card>
-        <Card className="text-center">
-          <Statistic
-            title="활성 CCTV"
-            value={stats?.activeCCTVs || 0}
-            valueStyle={{ color: '#52c41a' }}
-            prefix={<EyeOutlined />}
-          />
-        </Card>
-      </div>
-      
-      {/* 필터 섹션 */}
-      <Card title="필터" className="mb-6">
-        <div className="flex flex-wrap gap-4">
-          <Select defaultValue="realtime" style={{ width: 120 }}>
-            <Select.Option value="realtime">실시간</Select.Option>
-            <Select.Option value="1h">1시간</Select.Option>
-            <Select.Option value="24h">24시간</Select.Option>
-            <Select.Option value="7d">7일</Select.Option>
+
+      <Card className="mb-6">
+        <CardContent className="flex flex-wrap items-center gap-4 p-4">
+          <Select defaultValue="all">
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder="모든 이벤트 유형" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">모든 이벤트 유형</SelectItem>
+              <SelectItem value="fall_detected">낙상 감지</SelectItem>
+              <SelectItem value="fall_predicted">낙상 예측</SelectItem>
+              <SelectItem value="bedsore_detected">욕창 감지</SelectItem>
+              <SelectItem value="bedsore_predicted">욕창 예측</SelectItem>
+            </SelectContent>
           </Select>
-          
-          <Select defaultValue="all" style={{ width: 120 }}>
-            <Select.Option value="all">모든 층</Select.Option>
-            <Select.Option value="1">1층</Select.Option>
-            <Select.Option value="2">2층</Select.Option>
-            <Select.Option value="3">3층</Select.Option>
-            <Select.Option value="4">4층</Select.Option>
+          <Select defaultValue="all">
+            <SelectTrigger className="w-full sm:w-40">
+              <SelectValue placeholder="모든 심각도" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">모든 심각도</SelectItem>
+              <SelectItem value="critical">치명적</SelectItem>
+              <SelectItem value="high">높음</SelectItem>
+              <SelectItem value="medium">보통</SelectItem>
+              <SelectItem value="low">낮음</SelectItem>
+            </SelectContent>
           </Select>
-          
-          <Select defaultValue="all" style={{ width: 120 }}>
-            <Select.Option value="all">모든 병실</Select.Option>
-            <Select.Option value="401">401호</Select.Option>
-            <Select.Option value="402">402호</Select.Option>
-            <Select.Option value="403">403호</Select.Option>
-            <Select.Option value="405">405호</Select.Option>
-            <Select.Option value="407">407호</Select.Option>
-          </Select>
-          
-          <RangePicker />
-        </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-full sm:w-[260px] justify-start text-left font-normal",
+                  !date && "text-muted-foreground"
+                )}
+              >
+                <IoCalendarOutline className="mr-2 h-4 w-4" />
+                {date?.from ? (
+                  date.to ? (
+                    <>
+                      {format(date.from, "LLL dd, y", { locale: ko })} -{" "}
+                      {format(date.to, "LLL dd, y", { locale: ko })}
+                    </>
+                  ) : (
+                    format(date.from, "LLL dd, y", { locale: ko })
+                  )
+                ) : (
+                  <span>기간 선택</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={date?.from}
+                selected={date}
+                onSelect={setDate}
+                numberOfMonths={2}
+                locale={ko}
+              />
+            </PopoverContent>
+          </Popover>
+          <Button>필터 적용</Button>
+        </CardContent>
       </Card>
 
-      {/* 4칼럼 차트 섹션 - 컴팩트한 버전 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-        <Card title="시간대별 패턴" size="small" className="h-full">
-          <EventChart data={[]} type="bar" height={200} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <Card>
+          <CardHeader><CardTitle className="text-base">시간대별 패턴</CardTitle></CardHeader>
+          <CardContent><EventChart data={[]} type="bar" height={200} /></CardContent>
         </Card>
-        <Card title="유형별 분포" size="small" className="h-full">
-          <EventChart data={[]} type="pie" height={200} />
+        <Card>
+          <CardHeader><CardTitle className="text-base">유형별 분포</CardTitle></CardHeader>
+          <CardContent><EventChart data={[]} type="pie" height={200} /></CardContent>
         </Card>
-        <Card title="심각도 추세" size="small" className="h-full">
-          <EventChart data={[]} type="area" height={200} />
+        <Card>
+          <CardHeader><CardTitle className="text-base">심각도 추세</CardTitle></CardHeader>
+          <CardContent><EventChart data={[]} type="area" height={200} /></CardContent>
         </Card>
-        <Card title="병실별 빈도" size="small" className="h-full">
-          <EventChart data={[]} type="horizontal-bar" height={200} />
+        <Card>
+          <CardHeader><CardTitle className="text-base">병실별 빈도</CardTitle></CardHeader>
+          <CardContent><EventChart data={[]} type="horizontal-bar" height={200} /></CardContent>
         </Card>
       </div>
 
-      {/* 요일별 트렌드 차트 - 전체 너비 */}
-      <Card title="요일별 이벤트 유형 추세" className="mb-6">
-        <EventChart data={[]} type="line" height={280} />
-      </Card>
-      
-      {/* 최근 이벤트 테이블 섹션 */}
-      <Card title="최근 이벤트">
-        <Table 
-          dataSource={events} 
-          rowKey="id"
-          pagination={{ pageSize: 10 }}
-          size="small"
-          columns={[
-            {
-              title: '유형',
-              dataIndex: 'type',
-              key: 'type',
-              render: (type: Event['type'], record: Event) => (
-                <Tag color={getSeverityColor(record.severity)}>
-                  {getEventTypeLabel(type)}
-                </Tag>
-              ),
-            },
-            {
-              title: '병실',
-              dataIndex: 'roomNumber',
-              key: 'roomNumber',
-              render: (room: string) => `${room}호`,
-            },
-            {
-              title: '침대',
-              dataIndex: 'bedNumber',
-              key: 'bedNumber',
-              render: (bed: string) => `${bed}번`,
-            },
-            {
-              title: '환자',
-              dataIndex: 'patientName',
-              key: 'patientName',
-              render: (name: string) => name || '-',
-            },
-            {
-              title: '시간',
-              dataIndex: 'timestamp',
-              key: 'timestamp',
-              render: (timestamp: string) => new Date(timestamp).toLocaleString('ko-KR'),
-            },
-            {
-              title: '심각도',
-              key: 'severity',
-              dataIndex: 'severity',
-              render: (severity: Event['severity']) => (
-                <Tag color={getSeverityColor(severity)}>
-                  {severity === 'critical' ? '치명적' :
-                   severity === 'high' ? '높음' :
-                   severity === 'medium' ? '보통' : '낮음'}
-                </Tag>
-              ),
-            },
-            {
-              title: '상태',
-              key: 'status',
-              dataIndex: 'status',
-              render: (status: Event['status']) => (
-                <Tag color={status === 'unread' ? 'red' : status === 'read' ? 'orange' : 'green'}>
-                  {status === 'unread' ? '미확인' : 
-                   status === 'read' ? '확인' : '해결'}
-                </Tag>
-              ),
-            },
-            {
-              title: '액션',
-              key: 'action',
-              render: (_, record: Event) => (
-                <Button 
-                  type="link" 
-                  onClick={() => handleEventDetail(record.id)}
-                  className="p-0"
-                  size="small"
-                >
-                  상세보기
-                </Button>
-              ),
-            },
-          ]}
-        />
+      <div className="mb-6">
+        <Card>
+          <CardHeader><CardTitle>요일별 이벤트 유형 추세</CardTitle></CardHeader>
+          <CardContent><EventChart data={[]} type="line" height={280} /></CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader><CardTitle>최근 이벤트</CardTitle></CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>유형</TableHead>
+                <TableHead>병실</TableHead>
+                <TableHead>침대</TableHead>
+                <TableHead>환자</TableHead>
+                <TableHead>시간</TableHead>
+                <TableHead>심각도</TableHead>
+                <TableHead>상태</TableHead>
+                <TableHead>액션</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {events.map((event) => (
+                <TableRow key={event.id}>
+                  <TableCell>
+                    <Badge variant={getSeverityBadgeVariant(event.severity)} className={cn(event.severity === 'high' && 'bg-orange-100 text-orange-800 border-orange-200')}>
+                      {getEventTypeLabel(event.type)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{event.roomNumber}호</TableCell>
+                  <TableCell>{event.bedNumber}번</TableCell>
+                  <TableCell>{event.patientName || "-"}</TableCell>
+                  <TableCell>{new Date(event.timestamp).toLocaleString("ko-KR")}</TableCell>
+                  <TableCell>
+                    <Badge variant={getSeverityBadgeVariant(event.severity)} className={cn(event.severity === 'high' && 'bg-orange-100 text-orange-800 border-orange-200')}>
+                      {event.severity === "critical" ? "치명적" : event.severity === "high" ? "높음" : event.severity === "medium" ? "보통" : "낮음"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={event.status === 'unread' ? 'destructive' : event.status === 'read' ? 'secondary' : 'default'}>
+                      {event.status === "unread" ? "미확인" : event.status === "read" ? "확인" : "해결"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="link" className="p-0 h-auto" onClick={() => handleEventDetail(event.id)}>
+                      상세보기
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
       </Card>
     </DashboardLayout>
   );
-} 
+}

@@ -12,6 +12,7 @@ export interface User {
   role: 'super_admin' | 'hospital_admin' | 'nurse' | 'operator';
   hospitalId?: string;
   email?: string;
+  avatarUrl?: string;
   isActive: boolean;
   createdAt: string;
   approvedAt?: string;

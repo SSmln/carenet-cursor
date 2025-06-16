@@ -1,11 +1,33 @@
-'use client';
+"use client";
 
-import { ReactNode, useState, useEffect } from 'react';
-import { Button, Menu, Badge, Dropdown, Avatar } from 'antd';
-import { BarChartOutlined, EyeOutlined, BellOutlined, LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined, SettingOutlined, UserOutlined, ClockCircleOutlined } from '@ant-design/icons';
-import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
-import { useAuthStore } from '@/store/auth';
+import { ReactNode, useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
+import { useAuthStore } from "@/store/auth";
+import { cn } from "@/lib/utils";
+
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  IoBarChartOutline,
+  IoEyeOutline,
+  IoNotificationsOutline,
+  IoLogOutOutline,
+  IoMenuOutline,
+  IoSettingsOutline,
+  IoPersonOutline,
+  IoTimeOutline,
+  IoChevronBack,
+  IoChevronForward,
+} from "react-icons/io5";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -21,159 +43,134 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
 
   useEffect(() => {
     if (!isAuthenticated || !user) {
-      router.push('/login');
+      router.push("/login");
     }
   }, [isAuthenticated, user, router]);
 
-  // 실시간 시계 업데이트
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
   const handleLogout = () => {
     logout();
-    router.push('/login');
+    router.push("/login");
   };
 
   if (!user || !isAuthenticated) {
     return <div className="flex justify-center items-center min-h-screen">로딩 중...</div>;
   }
 
-  // 현재 활성 메뉴 항목 결정
-  const getSelectedKey = () => {
-    if (pathname?.includes('/dashboard')) return '1';
-    if (pathname?.includes('/cctv')) return '2';
-    if (pathname?.includes('/admin')) return '4';
-    return '1';
-  };
-
-  const sidebarWidth = collapsed ? 'w-20' : 'w-64';
-  const transitionClass = 'transition-all duration-300 ease-in-out';
-
-  // 사용자 역할 텍스트
   const getRoleText = (role: string) => {
-    switch (role) {
-      case 'super_admin': return '슈퍼 관리자';
-      case 'hospital_admin': return '병원 관리자';
-      case 'nurse': return '간호사';
-      case 'monitor': return '관제요원';
-      default: return role;
-    }
+    const roles: { [key: string]: string } = {
+      super_admin: "슈퍼 관리자",
+      hospital_admin: "병원 관리자",
+      nurse: "간호사",
+      monitor: "관제요원",
+    };
+    return roles[role] || role;
   };
 
-  // 사용자 메뉴 항목
-  const userMenuItems = [
-    {
-      key: 'profile',
-      icon: <UserOutlined />,
-      label: '프로필 설정',
-    },
-    {
-      key: 'logout',
-      icon: <LogoutOutlined />,
-      label: '로그아웃',
-      onClick: handleLogout,
-    },
-  ];
-
-  // 메뉴 항목 구성
   const menuItems = [
-    {
-      key: '1',
-      icon: <BarChartOutlined />,
-      label: <Link href="/dashboard">대시보드</Link>,
-    },
-    {
-      key: '2',
-      icon: <EyeOutlined />,
-      label: <Link href="/cctv">CCTV 뷰</Link>,
-    },
-    {
-      key: '3',
-      icon: <BellOutlined />,
-      label: '알림 관리',
-      disabled: true, // 아직 구현되지 않음
-    },
+    { href: "/dashboard", icon: IoBarChartOutline, label: "대시보드" },
+    { href: "/cctv", icon: IoEyeOutline, label: "CCTV 뷰" },
+    ...(user.role === "super_admin" || user.role === "hospital_admin"
+      ? [{ href: "/admin", icon: IoSettingsOutline, label: "관리자" }]
+      : []),
   ];
 
-  // 관리자 권한이 있는 경우 관리자 메뉴 추가
-  if (user.role === 'super_admin' || user.role === 'hospital_admin') {
-    menuItems.push({
-      key: '4',
-      icon: <SettingOutlined />,
-      label: <Link href="/admin">관리자</Link>,
-    });
-  }
+  const sidebarWidth = collapsed ? "w-20" : "w-64";
+  const transitionClass = "transition-all duration-300 ease-in-out";
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* 사이드바 */}
-      <div className={`${sidebarWidth} ${transitionClass} bg-slate-800 text-white fixed h-full shadow-lg z-10`}>
-        <div className="p-4 flex justify-between items-center border-b border-slate-700">
+    <div className="flex h-screen bg-gray-50">
+      {/* Sidebar */}
+      <aside className={`${sidebarWidth} ${transitionClass} bg-slate-900 text-white fixed h-full shadow-lg z-20 flex flex-col`}>
+        <div className="p-4 flex items-center justify-between border-b border-slate-700 h-16 shrink-0">
           {!collapsed && (
             <Link href="/" className="text-white hover:text-white">
               <h1 className="text-xl font-bold">Carenet</h1>
             </Link>
           )}
           <Button
-            type="text"
-            icon={collapsed ? <MenuUnfoldOutlined className="text-white" /> : <MenuFoldOutlined className="text-white" />}
+            variant="ghost"
+            size="icon"
             onClick={() => setCollapsed(!collapsed)}
-            className="flex items-center justify-center border-none text-white hover:bg-slate-700"
-          />
+            className="text-white hover:bg-slate-700 hover:text-white"
+          >
+            {collapsed ? <IoChevronForward /> : <IoChevronBack />}
+          </Button>
         </div>
-        <Menu
-          theme="dark"
-          mode="inline"
-          defaultSelectedKeys={[getSelectedKey()]}
-          className="bg-slate-800 border-r-0"
-          items={menuItems}
-        />
-      </div>
+        <nav className="flex-1 px-2 py-4 space-y-2">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link href={item.href} key={item.href}>
+                <Button
+                  variant={pathname.startsWith(item.href) ? "secondary" : "ghost"}
+                  className="w-full justify-start"
+                >
+                  <Icon className={cn("h-5 w-5", !collapsed && "mr-3")} />
+                  {!collapsed && <span>{item.label}</span>}
+                </Button>
+              </Link>
+            );
+          })}
+        </nav>
+      </aside>
 
-      {/* 메인 콘텐츠 */}
-      <div className={`flex-1 ${collapsed ? 'ml-20' : 'ml-64'} ${transitionClass} flex flex-col`}>
-        {/* 헤더 */}
-        <header className="bg-white h-16 flex justify-between items-center px-6 shadow-md border-b">
+      {/* Main Content */}
+      <div className={`flex-1 ${collapsed ? "ml-20" : "ml-64"} ${transitionClass} flex flex-col`}>
+        {/* Header */}
+        <header className="bg-white h-16 flex justify-between items-center px-6 shadow-sm border-b z-10 shrink-0">
           <div className="flex items-center space-x-4">
             <h1 className="text-xl font-bold text-gray-800">{title}</h1>
             <div className="hidden sm:flex items-center text-gray-500 text-sm">
-              <ClockCircleOutlined className="mr-1" />
-              {currentTime.toLocaleString('ko-KR')}
+              <IoTimeOutline className="mr-1.5 h-4 w-4" />
+              {currentTime.toLocaleString("ko-KR")}
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-4">
-            {/* 알림 아이콘 */}
-            <Badge count={5} className="cursor-pointer">
-              <BellOutlined className="text-lg text-gray-600 hover:text-blue-600" />
-            </Badge>
-            
-            {/* 사용자 정보 드롭다운 */}
-            <Dropdown 
-              menu={{ items: userMenuItems }} 
-              placement="bottomRight"
-              arrow={{ pointAtCenter: true }}
-            >
-              <div className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 px-3 py-2 rounded-lg">
-                <Avatar icon={<UserOutlined />} size="small" />
-                <div className="hidden sm:block">
-                  <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                  <div className="text-xs text-gray-500">{getRoleText(user.role)}</div>
-                </div>
-              </div>
-            </Dropdown>
+            <div className="relative cursor-pointer">
+              <IoNotificationsOutline className="h-6 w-6 text-gray-600 hover:text-blue-600" />
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white">5</span>
+            </div>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center space-x-2 cursor-pointer !p-2 h-auto">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.avatarUrl} />
+                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <div className="hidden sm:block text-left">
+                    <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                    <div className="text-xs text-gray-500">{getRoleText(user.role)}</div>
+                  </div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>내 계정</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem disabled>
+                  <IoPersonOutline className="mr-2 h-4 w-4" />
+                  <span>프로필 설정</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>
+                  <IoLogOutOutline className="mr-2 h-4 w-4" />
+                  <span>로그아웃</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
-        {/* 콘텐츠 영역 */}
-        <main className="flex-1 p-6 overflow-y-auto bg-gray-50">
+        {/* Content Area */}
+        <main className="flex-1 p-6 overflow-y-auto">
           {children}
         </main>
       </div>
     </div>
   );
-} 
+}

@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { ConfigProvider } from 'antd';
-import { AntdRegistry } from '@ant-design/nextjs-registry';
+import { Toaster } from "@/components/ui/sonner";
 import { ReactQueryProvider } from '@/lib/react-query';
 
 const inter = Inter({ subsets: ["latin"] });
@@ -21,18 +20,8 @@ export default function RootLayout({
     <html lang="ko">
       <body className={inter.className}>
         <ReactQueryProvider>
-          <AntdRegistry>
-            <ConfigProvider
-              theme={{
-                token: { 
-                  colorPrimary: '#1677ff',
-                  borderRadius: 4,
-                },
-              }}
-            >
-              {children}
-            </ConfigProvider>
-          </AntdRegistry>
+          {children}
+          <Toaster />
         </ReactQueryProvider>
       </body>
     </html>
