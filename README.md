@@ -6,9 +6,13 @@
 
 - Next.js, Tailwind CSS v4, Shadcn UI, zustand, react-query, react-icons (io5,io4), recharts
 
+기술 스택: Next.js, Tailwind CSS v4, Shadcn UI, zustand, react-query, react-icons (io5,io4), recharts
+
+패키지 관리는 pnpm을 사용하며, shadcn 컴포넌트는 `pnpm dlx shadcn@latest add <component-name>` 명령어로 설치합니다.
+
 ## 1. 목적
 
-홈 CCTV 기반 노인 낙상‧욕창 모니터링 시스템 **Carenet**의 프론트엔드 애플리케이션 요구사항을 정의한다. 대상 범위는 웹 클라이언트(Next.js + TailwindCSS + AntD)이다. 백엔드 API·모델 구현은 별도 문서에서 다루고, 본 문서는 UI/UX, 데이터 흐름, 기능 명세에 집중한다.
+홈 CCTV 기반 노인 낙상‧욕창 모니터링 시스템 **Carenet**의 프론트엔드 애플리케이션 요구사항을 정의한다. 대상 범위는 웹 클라이언트(Next.js + TailwindCSS + Shadcn UI)이다. 백엔드 API·모델 구현은 별도 문서에서 다루고, 본 문서는 UI/UX, 데이터 흐름, 기능 명세에 집중한다.
 
 ## 2. 주요 목표
 
@@ -119,7 +123,7 @@
 - shadcn/ui Card, Dialog, Button 우선 사용
 - KPI 카드: `Card` + `Progress`(애니메이션)
 - 차트: `recharts` LineChart, BarChart
-- 테이블: AntD Table + 서버사이드 Pagination
+- 테이블: Shadcn Table + 서버사이드 Pagination
 - 전역 상태: React Query + Zod 스키마 검증
 
 ## 7. 인터랙션 & 애니메이션
@@ -149,14 +153,14 @@
 
 ## 9. 성능 & 품질 기준 성능 & 품질 기준
 
-- 초기 페이지 LCP < 2.5 s (데스크톱 환경, 75th percentile)
-- WebSocket 재연결 지연 < 3 s
+- 초기 페이지 LCP < 2.5 s (데스크톱 환경, 75th percentile)
+- WebSocket 재연결 지연 < 3 s
 - Lighthouse Performance 90점 이상
 - WCAG 2.1 AA 접근성 준수
 
 ## 10. 테스트 전략
 
-- Jest + React Testing Library 컴포넌트 단위 테스트 (Coverage ≥ 80 %)
+- Jest + React Testing Library 컴포넌트 단위 테스트 (Coverage ≥ 80 %)
 - Cypress E2E: 핵심 시나리오(낙상 발생→확인) 매 빌드 실행
 - VRT(시각 회귀): Storybook + Chromatic
 

@@ -42,15 +42,17 @@ interface EventChartProps {
   height?: number;
 }
 
-// 색상 팔레트
+// Dracula 색상 팔레트
 const COLORS = [
-  "#cf1322",
-  "#fa8c16",
-  "#faad14",
-  "#52c41a",
-  "#1890ff",
-  "#722ed1",
-  "#eb2f96",
+  "#BD93F9", // Purple
+  "#8BE9FD", // Cyan
+  "#50FA7B", // Green
+  "#FFB86C", // Orange
+  "#FF79C6", // Pink
+  "#FF5555", // Red
+  "#F1FA8C", // Yellow
+  "#6272A4", // Comment
+  "#F8F8F2", // Foreground
 ];
 
 // 샘플 데이터들
@@ -133,38 +135,41 @@ export default function EventChart({
         {title && <h3 className="text-lg font-semibold mb-4">{title}</h3>}
         <ResponsiveContainer {...chartStyle}>
           <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+            <XAxis dataKey="name" stroke="var(--foreground)" />
+            <YAxis stroke="var(--foreground)" />
+            <Tooltip
+              contentStyle={{ background: 'var(--popover)', border: '1px solid var(--border)' }}
+              itemStyle={{ color: 'var(--popover-foreground)' }}
+            />
             <Legend />
             <Line
               type="monotone"
               dataKey="낙상감지"
-              stroke="#cf1322"
+              stroke={COLORS[5]}
               strokeWidth={2}
-              dot={{ fill: "#cf1322" }}
+              dot={{ fill: COLORS[5] }}
             />
             <Line
               type="monotone"
               dataKey="낙상예측"
-              stroke="#fa8c16"
+              stroke={COLORS[3]}
               strokeWidth={2}
-              dot={{ fill: "#fa8c16" }}
+              dot={{ fill: COLORS[3] }}
             />
             <Line
               type="monotone"
               dataKey="욕창감지"
-              stroke="#f5222d"
+              stroke={COLORS[4]}
               strokeWidth={2}
-              dot={{ fill: "#f5222d" }}
+              dot={{ fill: COLORS[4] }}
             />
             <Line
               type="monotone"
               dataKey="욕창예측"
-              stroke="#faad14"
+              stroke={COLORS[0]}
               strokeWidth={2}
-              dot={{ fill: "#faad14" }}
+              dot={{ fill: COLORS[0] }}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -178,12 +183,15 @@ export default function EventChart({
         {title && <h3 className="text-lg font-semibold mb-4">{title}</h3>}
         <ResponsiveContainer {...chartStyle}>
           <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="time" />
-            <YAxis />
-            <Tooltip />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+            <XAxis dataKey="time" stroke="var(--foreground)" />
+            <YAxis stroke="var(--foreground)" />
+            <Tooltip
+              contentStyle={{ background: 'var(--popover)', border: '1px solid var(--border)' }}
+              itemStyle={{ color: 'var(--popover-foreground)' }}
+            />
             <Legend />
-            <Bar dataKey="이벤트수" fill="#1890ff" />
+            <Bar dataKey="이벤트수" fill={COLORS[1]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -203,7 +211,7 @@ export default function EventChart({
               labelLine={false}
               label={renderCustomLabel}
               outerRadius={80}
-              fill="#8884d8"
+              fill={COLORS[0]}
               dataKey="value"
             >
               {chartData.map((entry, index) => (
@@ -213,7 +221,10 @@ export default function EventChart({
                 />
               ))}
             </Pie>
-            <Tooltip formatter={(value, name) => [`${value}%`, name]} />
+            <Tooltip formatter={(value, name) => [`${value}%`, name]}
+              contentStyle={{ background: 'var(--popover)', border: '1px solid var(--border)' }}
+              itemStyle={{ color: 'var(--popover-foreground)' }}
+            />
           </PieChart>
         </ResponsiveContainer>
       </div>
@@ -226,38 +237,41 @@ export default function EventChart({
         {title && <h3 className="text-lg font-semibold mb-4">{title}</h3>}
         <ResponsiveContainer {...chartStyle}>
           <AreaChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+            <XAxis dataKey="name" stroke="var(--foreground)" />
+            <YAxis stroke="var(--foreground)" />
+            <Tooltip
+              contentStyle={{ background: 'var(--popover)', border: '1px solid var(--border)' }}
+              itemStyle={{ color: 'var(--popover-foreground)' }}
+            />
             <Legend />
             <Area
               type="monotone"
               dataKey="critical"
               stackId="1"
-              stroke="#cf1322"
-              fill="#cf1322"
+              stroke={COLORS[5]}
+              fill={COLORS[5]}
             />
             <Area
               type="monotone"
               dataKey="high"
               stackId="1"
-              stroke="#fa8c16"
-              fill="#fa8c16"
+              stroke={COLORS[3]}
+              fill={COLORS[3]}
             />
             <Area
               type="monotone"
               dataKey="medium"
               stackId="1"
-              stroke="#faad14"
-              fill="#faad14"
+              stroke={COLORS[6]}
+              fill={COLORS[6]}
             />
             <Area
               type="monotone"
               dataKey="low"
               stackId="1"
-              stroke="#52c41a"
-              fill="#52c41a"
+              stroke={COLORS[2]}
+              fill={COLORS[2]}
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -270,17 +284,16 @@ export default function EventChart({
       <div className="w-full" style={{ height }}>
         {title && <h3 className="text-lg font-semibold mb-4">{title}</h3>}
         <ResponsiveContainer {...chartStyle}>
-          <BarChart
-            layout="horizontal"
-            data={chartData}
-            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis type="number" />
-            <YAxis dataKey="name" type="category" />
-            <Tooltip />
+          <BarChart data={chartData} layout="vertical">
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+            <XAxis type="number" stroke="var(--foreground)" />
+            <YAxis type="category" dataKey="name" stroke="var(--foreground)" />
+            <Tooltip
+              contentStyle={{ background: 'var(--popover)', border: '1px solid var(--border)' }}
+              itemStyle={{ color: 'var(--popover-foreground)' }}
+            />
             <Legend />
-            <Bar dataKey="count" fill="#1890ff" />
+            <Bar dataKey="count" fill={COLORS[0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

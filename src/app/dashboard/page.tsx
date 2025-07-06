@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DateRange } from "react-day-picker";
 import { format } from "date-fns";
-import { ko } from 'date-fns/locale';
+import { ko } from "date-fns/locale";
 
 import {
   IoBodyOutline,
   IoBandageOutline,
   IoEyeOutline,
   IoAlertCircleOutline,
-  IoCalendarOutline
+  IoCalendarOutline,
 } from "react-icons/io5";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -22,22 +22,79 @@ import { Event } from "@/types";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 
 const kpiCardData = [
-  { key: 'fallDetected', title: '낙상 감지', icon: IoBodyOutline, color: 'text-red-600' },
-  { key: 'fallPredicted', title: '낙상 예측', icon: IoBodyOutline, color: 'text-orange-500' },
-  { key: 'bedsoreDetected', title: '욕창 감지', icon: IoBandageOutline, color: 'text-red-600' },
-  { key: 'bedsorePredicted', title: '욕창 예측', icon: IoBandageOutline, color: 'text-orange-500' },
-  { key: 'curtainAlerts', title: '커튼 알림', icon: IoAlertCircleOutline, color: 'text-blue-500' },
-  { key: 'bedEmptyAlerts', title: '침대 비움', icon: IoAlertCircleOutline, color: 'text-purple-500' },
-  { key: 'totalActivePatients', title: '활성 환자', icon: IoEyeOutline, color: 'text-green-500' },
-  { key: 'activeCCTVs', title: '활성 CCTV', icon: IoEyeOutline, color: 'text-green-500' },
+  {
+    key: "fallDetected",
+    title: "낙상 감지",
+    icon: IoBodyOutline,
+    color: "text-red-600",
+  },
+  {
+    key: "fallPredicted",
+    title: "낙상 예측",
+    icon: IoBodyOutline,
+    color: "text-orange-500",
+  },
+  {
+    key: "bedsoreDetected",
+    title: "욕창 감지",
+    icon: IoBandageOutline,
+    color: "text-red-600",
+  },
+  {
+    key: "bedsorePredicted",
+    title: "욕창 예측",
+    icon: IoBandageOutline,
+    color: "text-orange-500",
+  },
+  {
+    key: "curtainAlerts",
+    title: "커튼 알림",
+    icon: IoAlertCircleOutline,
+    color: "text-blue-500",
+  },
+  {
+    key: "bedEmptyAlerts",
+    title: "침대 비움",
+    icon: IoAlertCircleOutline,
+    color: "text-purple-500",
+  },
+  {
+    key: "totalActivePatients",
+    title: "활성 환자",
+    icon: IoEyeOutline,
+    color: "text-green-500",
+  },
+  {
+    key: "activeCCTVs",
+    title: "활성 CCTV",
+    icon: IoEyeOutline,
+    color: "text-green-500",
+  },
 ] as const;
 
 export default function DashboardPage() {
@@ -66,11 +123,16 @@ export default function DashboardPage() {
 
   const getSeverityBadgeVariant = (severity: Event["severity"]) => {
     switch (severity) {
-      case "critical": return "destructive";
-      case "high": return "secondary"; // Use custom color for high
-      case "medium": return "default";
-      case "low": return "outline";
-      default: return "default";
+      case "critical":
+        return "destructive";
+      case "high":
+        return "secondary"; // Use custom color for high
+      case "medium":
+        return "default";
+      case "low":
+        return "outline";
+      default:
+        return "default";
     }
   };
 
@@ -81,19 +143,25 @@ export default function DashboardPage() {
   return (
     <DashboardLayout title="대시보드">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {kpiCardData.map(item => {
+        {kpiCardData.map((item) => {
           const Icon = item.icon;
           return (
             <Card key={item.key}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
-                <Icon className={`h-4 w-4 text-muted-foreground ${item.color}`} />
+                <CardTitle className="text-sm font-medium">
+                  {item.title}
+                </CardTitle>
+                <Icon
+                  className={`h-4 w-4 text-muted-foreground ${item.color}`}
+                />
               </CardHeader>
               <CardContent>
-                <div className={`text-2xl font-bold ${item.color}`}>{stats?.[item.key] || 0}</div>
+                <div className={`text-2xl font-bold ${item.color}`}>
+                  {stats?.[item.key] || 0}
+                </div>
               </CardContent>
             </Card>
-          )
+          );
         })}
       </div>
 
@@ -165,32 +233,54 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <Card>
-          <CardHeader><CardTitle className="text-base">시간대별 패턴</CardTitle></CardHeader>
-          <CardContent><EventChart data={[]} type="bar" height={200} /></CardContent>
+          <CardHeader>
+            <CardTitle className="text-base">시간대별 패턴</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <EventChart data={[]} type="bar" height={200} />
+          </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-base">유형별 분포</CardTitle></CardHeader>
-          <CardContent><EventChart data={[]} type="pie" height={200} /></CardContent>
+          <CardHeader>
+            <CardTitle className="text-base">유형별 분포</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <EventChart data={[]} type="pie" height={200} />
+          </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-base">심각도 추세</CardTitle></CardHeader>
-          <CardContent><EventChart data={[]} type="area" height={200} /></CardContent>
+          <CardHeader>
+            <CardTitle className="text-base">심각도 추세</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <EventChart data={[]} type="area" height={200} />
+          </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-base">병실별 빈도</CardTitle></CardHeader>
-          <CardContent><EventChart data={[]} type="horizontal-bar" height={200} /></CardContent>
+          <CardHeader>
+            <CardTitle className="text-base">병실별 빈도</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <EventChart data={[]} type="horizontal-bar" height={200} />
+          </CardContent>
         </Card>
       </div>
 
       <div className="mb-6">
         <Card>
-          <CardHeader><CardTitle>요일별 이벤트 유형 추세</CardTitle></CardHeader>
-          <CardContent><EventChart data={[]} type="line" height={280} /></CardContent>
+          <CardHeader>
+            <CardTitle>요일별 이벤트 유형 추세</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <EventChart data={[]} type="line" height={280} />
+          </CardContent>
         </Card>
       </div>
 
       <Card>
-        <CardHeader><CardTitle>최근 이벤트</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>최근 이벤트</CardTitle>
+        </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
@@ -209,26 +299,62 @@ export default function DashboardPage() {
               {events.map((event) => (
                 <TableRow key={event.id}>
                   <TableCell>
-                    <Badge variant={getSeverityBadgeVariant(event.severity)} className={cn(event.severity === 'high' && 'bg-orange-100 text-orange-800 border-orange-200')}>
+                    <Badge
+                      variant={getSeverityBadgeVariant(event.severity)}
+                      className={cn(
+                        event.severity === "high" &&
+                          "bg-orange-100 text-orange-800 border-orange-200"
+                      )}
+                    >
                       {getEventTypeLabel(event.type)}
                     </Badge>
                   </TableCell>
                   <TableCell>{event.roomNumber}호</TableCell>
                   <TableCell>{event.bedNumber}번</TableCell>
                   <TableCell>{event.patientName || "-"}</TableCell>
-                  <TableCell>{new Date(event.timestamp).toLocaleString("ko-KR")}</TableCell>
                   <TableCell>
-                    <Badge variant={getSeverityBadgeVariant(event.severity)} className={cn(event.severity === 'high' && 'bg-orange-100 text-orange-800 border-orange-200')}>
-                      {event.severity === "critical" ? "치명적" : event.severity === "high" ? "높음" : event.severity === "medium" ? "보통" : "낮음"}
+                    {new Date(event.timestamp).toLocaleString("ko-KR")}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={getSeverityBadgeVariant(event.severity)}
+                      className={cn(
+                        event.severity === "high" &&
+                          "bg-orange-100 text-orange-800 border-orange-200"
+                      )}
+                    >
+                      {event.severity === "critical"
+                        ? "치명적"
+                        : event.severity === "high"
+                          ? "높음"
+                          : event.severity === "medium"
+                            ? "보통"
+                            : "낮음"}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={event.status === 'unread' ? 'destructive' : event.status === 'read' ? 'secondary' : 'default'}>
-                      {event.status === "unread" ? "미확인" : event.status === "read" ? "확인" : "해결"}
+                    <Badge
+                      variant={
+                        event.status === "unread"
+                          ? "destructive"
+                          : event.status === "read"
+                            ? "secondary"
+                            : "default"
+                      }
+                    >
+                      {event.status === "unread"
+                        ? "미확인"
+                        : event.status === "read"
+                          ? "확인"
+                          : "해결"}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Button variant="link" className="p-0 h-auto" onClick={() => handleEventDetail(event.id)}>
+                    <Button
+                      variant="link"
+                      className="p-0 h-auto"
+                      onClick={() => handleEventDetail(event.id)}
+                    >
                       상세보기
                     </Button>
                   </TableCell>

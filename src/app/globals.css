@@ -12,8 +12,22 @@
   --card-foreground: oklch(0.141 0.005 285.823);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: #1677ff; /* DEFAULT from tailwind.config.ts */
+
+  /* Dracula Purple for primary in light mode (derived lighter version) */
+  --primary: #BD93F9;
+  --primary-50: #ede4fc;
+  --primary-100: #d8c8fa;
+  --primary-200: #c2acef;
+  --primary-300: #ac90e4;
+  --primary-400: #9774d9;
+    --primary-500: #8158cd;
+  --primary-600: #6b43bf;
+  --primary-700: #562eaf;
+  --primary-800: #4119a0;
+  --primary-900: #2c0590;
+
   --primary-foreground: oklch(0.985 0 0);
+
   --secondary: oklch(0.967 0.001 286.375);
   --secondary-foreground: oklch(0.21 0.006 285.885);
   --muted: oklch(0.967 0.001 286.375);
@@ -52,8 +66,6 @@ html {
 body {
   margin: 0;
   padding: 0;
-  background-color: white;
-  color: rgb(17 24 39);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -158,38 +170,41 @@ body {
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* Dracula theme specific overrides for .dark */
 .dark {
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: #1677ff; /* Link to the new primary color from @theme */
-  --primary-foreground: oklch(0.21 0.006 285.885);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.552 0.016 285.938);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.552 0.016 285.938);
+  --background: #282A36;
+  --foreground: #F8F8F2;
+  --card: #44475A;
+  --card-foreground: #F8F8F2;
+  --popover: #44475A;
+  --popover-foreground: #F8F8F2;
+  --primary: #BD93F9;
+  --primary-foreground: #282A36;
+  --secondary: #6272A4;
+  --secondary-foreground: #F8F8F2;
+  --muted: #6272A4;
+  --muted-foreground: #F8F8F2;
+  --accent: #8BE9FD;
+  --accent-foreground: #282A36;
+  --destructive: #FF5555;
+  --border: #44475A;
+  --input: #44475A;
+  --ring: #BD93F9;
+
+  --chart-1: #50FA7B;
+  --chart-2: #FFB86C;
+  --chart-3: #FF79C6;
+  --chart-4: #F1FA8C;
+  --chart-5: #8BE9FD;
+
+  --sidebar: #282A36;
+  --sidebar-foreground: #F8F8F2;
+  --sidebar-primary: #BD93F9;
+  --sidebar-primary-foreground: #282A36;
+  --sidebar-accent: #8BE9FD;
+  --sidebar-accent-foreground: #282A36;
+  --sidebar-border: #44475A;
+  --sidebar-ring: #BD93F9;
 }
 
 @layer base {
@@ -202,15 +217,29 @@ body {
 }
 
 @theme {
-  --color-primary: #1677ff; /* DEFAULT from tailwind.config.ts */
-  --color-primary-50: #e6f4ff;
-  --color-primary-100: #bae0ff;
-  --color-primary-200: #91caff;
-  --color-primary-300: #69b1ff;
-  --color-primary-400: #4096ff;
-  --color-primary-500: #1677ff;
-  --color-primary-600: #0958d9;
-  --color-primary-700: #003eb3;
-  --color-primary-800: #002c8c;
-  --color-primary-900: #001d66;
+  /* Dracula Purple for primary theme utility classes */
+  --color-primary: #BD93F9;
+  --color-primary-50: #ede4fc;
+  --color-primary-100: #d8c8fa;
+  --color-primary-200: #c2acef;
+  --color-primary-300: #ac90e4;
+  --color-primary-400: #9774d9;
+  --color-primary-500: #8158cd;
+  --color-primary-600: #6b43bf;
+  --color-primary-700: #562eaf;
+  --color-primary-800: #4119a0;
+  --color-primary-900: #2c0590;
+
+  /* Other Dracula accent colors for direct use as Tailwind classes if needed */
+  --color-dracula-background: #282A36;
+  --color-dracula-current-line: #44475A;
+  --color-dracula-foreground: #F8F8F2;
+  --color-dracula-comment: #6272A4;
+  --color-dracula-cyan: #8BE9FD;
+  --color-dracula-green: #50FA7B;
+  --color-dracula-orange: #FFB86C;
+  --color-dracula-pink: #FF79C6;
+  --color-dracula-purple: #BD93F9;
+  --color-dracula-red: #FF5555;
+  --color-dracula-yellow: #F1FA8C;
 } 
