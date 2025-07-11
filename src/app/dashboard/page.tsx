@@ -295,7 +295,7 @@ export default function DashboardPage() {
                 <TableHead>액션</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            {/* <TableBody>
               {events.map((event) => (
                 <TableRow key={event.id}>
                   <TableCell>
@@ -360,7 +360,7 @@ export default function DashboardPage() {
                   </TableCell>
                 </TableRow>
               ))}
-            </TableBody>
+            </TableBody> */}
           </Table>
         </CardContent>
       </Card>

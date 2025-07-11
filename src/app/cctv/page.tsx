@@ -17,44 +17,36 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { MOCK_CCTVS } from "@/constants/mock-data";
-import { CCTV } from "@/types";
-import ReactPlayer from "react-player";
+import { MOCK_CCTVS } from "@/constants/mock-data"; // 이 부분은 사용되지 않을 수 있습니다.
+import { CCTV, Event } from "@/types"; // Event와 CCTV 인터페이스 임포트
+import ReactPlayer from "react-player"; // 이 부분은 현재 사용되지 않을 수 있습니다.
 import { useMutation, useQueries } from "@tanstack/react-query";
-import Cookies from "js-cookie";
-import { isPageStatic } from "next/dist/build/utils";
-
-const fetchStreamCCtvs = async (CCtvId) => {
-  const apiUrl = `http://210.94.242.37:7420/api/v1/stream/jpg/${CCtvId}`;
-  // const accessToken = Cookies.("access_token") || "";
-  const accessToken = Cookies.get("access_token") || "";
-  try {
-    const response = await fetch(`${apiUrl}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${accessToken}`, // 토큰만 필요
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    const blob = await response.blob(); // 바이너리 데이터로 받기
-    const imageUrl = URL.createObjectURL(blob); // 프론트에서 쓸 수 있는 이미지 URL 생성
-    console.log("CCTV 스트림 URL:", imageUrl);
-    return imageUrl;
-  } catch (error) {
-    console.error("CCTV 스트림 요청 실패:", error);
-    throw new Error("CCTV 스트림 요청 실패");
-  }
-};
+import Cookies from "js-cookie"; // 이 부분은 현재 사용되지 않을 수 있습니다.
+import { isPageStatic } from "next/dist/build/utils"; // 이 부분은 현재 사용되지 않을 수 있습니다.
+import { useRouter } from "next/navigation";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { useDashboardStore } from "@/store/dashboard";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 export default function CCTVPage() {
+  const { stats, events, setStats, setEvents } = useDashboardStore();
+  console.log(events);
+
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCCTV, setSelectedCCTV] = useState<CCTV | null>(null);
   const [gridType, setGridType] = useState("grid-4");
-
+  const router = useRouter();
   const cctvIds = [
     "6853abdea8c3d423cecc84da",
     "68639825d1f07bb25c82dee7",
@@ -65,28 +57,14 @@ export default function CCTVPage() {
   const cctvQueries = useQueries({
     queries: cctvIds.map((id) => ({
       queryKey: ["cctvStream", id],
-      queryFn: () => fetchStreamCCtvs(id),
-      staleTime: 1000 * 60, // 필요시 설정
+      queryFn: async () => `/api/stream/${id}`, // Next.js API 라우트 URL 반환
+      staleTime: Infinity, // 스트림 URL은 변하지 않으므로 무한대로 설정
+      gcTime: Infinity,
     })),
   });
 
   console.log("CCTV 스트림 쿼리 결과:", cctvQueries);
-  // const {
-  //   data,
-  //   isPending,
-  //   isError,
-  //   mutate: fetchStream,
-  // } = useMutation({
-  //   mutationKey: ["cctvs"],
-  //   mutationFn: async () => {
-  //     const result = await fetchStreamCCtvs();
-  //     return result;
-  //   },
-  //   // refetchOnWindowFocus: false,
-  // });
-  // console.log()
   const openCCTVModal = (cctv: CCTV) => {
-    // fetchStream();
     setSelectedCCTV(cctv);
     setModalVisible(true);
   };
@@ -94,6 +72,42 @@ export default function CCTVPage() {
   const handleModalClose = () => {
     setModalVisible(false);
     setSelectedCCTV(null);
+  };
+
+  // 이전 getEventTypeLabel 함수는 Event 인터페이스 변경으로 더 이상 필요하지 않습니다.
+  // event_type에 따라 뱃지 variant를 반환하는 함수
+  const getEventBadgeVariant = (eventType: string) => {
+    switch (eventType) {
+      case "fall":
+        return "destructive"; // 낙상: 위험 (빨간색)
+      case "bedsore":
+        return "warning"; // 욕창: 주의 (노란색)
+      case "bed_empty":
+        return "secondary"; // 침대 비움: 보조 (회색)
+      // 필요한 경우 다른 event_type에 대한 케이스 추가
+      default:
+        return "default"; // 기타: 기본 (파란색 또는 흰색)
+    }
+  };
+
+  const transitionEventType = (eventType: string) => {
+    switch (eventType) {
+      case "destructive":
+        return "낙상"; // 낙상: 위험 (빨간색)
+      case "warning":
+        return "욕창"; // 욕창: 주의 (노란색)
+      case "secondary":
+        return "침대 비움"; // 침대 비움: 보조 (회색)
+      // 필요한 경우 다른 event_type에 대한 케이스 추가
+      default:
+        return "default"; // 기타: 기본 (파란색 또는 흰색)
+    }
+  };
+
+  // getSeverityBadgeVariant 함수는 새로운 Event 스키마에 severity 필드가 없으므로 제거합니다.
+
+  const handleEventDetail = (eventId: string) => {
+    router.push(`/event/${eventId}`);
   };
 
   const getStreamUrl = (url: string) => {
@@ -113,6 +127,7 @@ export default function CCTVPage() {
     }
   };
 
+  // CCTV 상태 관련 함수들은 Event 스키마 변경과 직접적인 관련이 없으므로 유지합니다.
   const getStatusColor = (status: CCTV["status"]) => {
     switch (status) {
       case "normal":
@@ -143,9 +158,42 @@ export default function CCTVPage() {
     }
   };
 
+  // 클릭시 -> 처리
+  // 낙상
+  // 욕창
+
+  // 스테이더스 라벨 없애기
+
+  // 베드 아이디 필요없음
+  //  환자 아이디 만들어야함
+
+  // 최근이벤트 크기 고정
+
+  const tranferBedIdToIndex = (bedId) => {
+    // "6853abdea8c3d423cecc84da",
+    // "68639825d1f07bb25c82dee7",
+    // "6863982ed1f07bb25c82dee8",
+    // "68639835d1f07bb25c82dee9",
+
+    switch (bedId) {
+      case "6853abdea8c3d423cecc84da":
+        return "1번 침대"; // 낙상: 위험 (빨간색)
+      case "68639825d1f07bb25c82dee7":
+        return "2번 침대"; // 욕창: 주의 (노란색)
+      case "6863982ed1f07bb25c82dee8":
+        return "3번 침대"; // 침대 비움: 보조 (회색)
+
+      case "68639835d1f07bb25c82dee9":
+        return "4번 침대";
+      // 필요한 경우 다른 event_type에 대한 케이스 추가
+      default:
+        return "default"; // 기타: 기본 (파란색 또는 흰색)
+    }
+  };
+
   return (
     <DashboardLayout title="CCTV 뷰">
-      <div className="mb-6">
+      <div className="mb-6 flex flex-col space-y-4">
         <Card className="">
           <div className="p-4">
             <h2 className="text-xl font-semibold mb-4">병실 CCTV 뷰</h2>
@@ -197,24 +245,9 @@ export default function CCTVPage() {
               {cctvQueries.map((query, index) => (
                 <Card
                   key={cctvIds[index]}
-                  className="cursor-pointer h-full p-0"
+                  className="cursor-pointer h-full p-0 hover:border-destructive"
                 >
-                  <div className="p-4 border-border-gray-200 rounded-md">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-semibold">CCTV {index + 1}</span>
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{
-                            backgroundColor: getStatusColor("normal"), // 임시로 "normal" 상태로 설정
-                          }}
-                        />
-                        <span className="text-xs text-gray-500">
-                          {getStatusText("normal")}{" "}
-                          {/* 임시로 "normal" 상태로 설정 */}
-                        </span>
-                      </div>
-                    </div>
+                  <div className="p-4 border-border-gray-200 rounded-md ">
                     {query.isPending ? (
                       <div className="flex justify-center items-center min-h-[200px]">
                         <span className="text-gray-500">로딩 중...</span>
@@ -224,55 +257,89 @@ export default function CCTVPage() {
                         <span className="text-red-500">오류 발생</span>
                       </div>
                     ) : (
-                      <div className="w-full h-full">
+                      <div className="w-full h-full ">
+                        <p className="mb-1">{index + 1}번 침대</p>
                         <img
-                          src={query.data} // ✅ 여기서 가져옴
+                          src={query.data} // /api/stream/{cctvId} URL
                           alt={`CCTV ${index + 1}`}
-                          className=""
+                          className="w-full h-auto rounded-md"
                         />
                       </div>
                     )}
                   </div>
                 </Card>
               ))}
-
-              {/* {MOCK_CCTVS.map((cctv) => (
-                <div key={cctv.id}>
-                  <Card
-                    onClick={() => openCCTVModal(cctv)}
-                    className="cursor-pointer h-full p-0"
-                  >
-                    <div className="p-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-semibold">{cctv.name}</span>
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{
-                              backgroundColor: getStatusColor(cctv.status),
-                            }}
-                          />
-                          <span className="text-xs text-gray-500">
-                            {getStatusText(cctv.status)}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="relative pb-[56.25%] overflow-hidden bg-gray-200 rounded-md">
-                        <img />
-
-                        <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
-                          {cctv.floor}층 {cctv.roomNumber}호
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                </div>
-              ))} */}
             </div>
           </div>
         </Card>
+        <Card>
+          <CardHeader>
+            <h2 className="text-xl font-semibold mb-4">최근 이벤트</h2>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>이벤트 유형</TableHead>
+                  <TableHead>발생 시간</TableHead>
+                  <TableHead>베드 ID</TableHead>
+                  <TableHead>CCTV ID</TableHead>
+                  <TableHead>처리 여부</TableHead>
+                  <TableHead>메모</TableHead>
+                  <TableHead>환자 ID</TableHead>
+                  <TableHead>액션</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {events.map((event) => (
+                  <TableRow key={event._id}>
+                    <TableCell>
+                      <Badge variant={getEventBadgeVariant(event.event_type)}>
+                        {transitionEventType(
+                          getEventBadgeVariant(event.event_type)
+                        )}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {format(
+                        new Date(event.occurred_at),
+                        "yyyy년 MM월 dd일 HH:mm:ss"
+                      )}
+                    </TableCell>
+                    <TableCell>{event.bed_id || "-"}</TableCell>
+                    <TableCell>
+                      {tranferBedIdToIndex(event.cctv_id) || "-"}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={event.handled ? "default" : "destructive"}
+                      >
+                        {event.handled ? "처리됨" : "미처리"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{event.note || "-"}</TableCell>
+                    <TableCell>{event.patient_id || "-"}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="link"
+                        className="p-0 h-auto"
+                        onClick={() => handleEventDetail(event._id)}
+                      >
+                        상세보기
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       </div>
-      <Dialog open={modalVisible} onOpenChange={handleModalClose}>
+    </DashboardLayout>
+  );
+}
+{
+  /* <Dialog open={modalVisible} onOpenChange={handleModalClose}>
         <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden">
           <DialogHeader className="p-4">
             <DialogTitle>
@@ -313,7 +380,5 @@ export default function CCTVPage() {
             </div>
           )}
         </DialogContent>
-      </Dialog>
-    </DashboardLayout>
-  );
+      </Dialog> */
 }

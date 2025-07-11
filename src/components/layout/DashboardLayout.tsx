@@ -32,7 +32,7 @@ import {
 import Cookies from "js-cookie";
 import { useQuery } from "@tanstack/react-query";
 import { CurrentTime } from "./currentTime";
-
+import { Events } from "./events";
 interface DashboardLayoutProps {
   children: ReactNode;
   title: string;
@@ -230,10 +230,7 @@ export default function DashboardLayout({
 
           <div className="flex items-center space-x-4">
             <div className="relative cursor-pointer">
-              <IoNotificationsOutline className="h-6 w-6 text-muted-foreground hover:text-primary" />
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-xs font-medium text-white">
-                5
-              </span>
+              <Events />
             </div>
 
             <DropdownMenu>
@@ -248,10 +245,10 @@ export default function DashboardLayout({
                   </Avatar>
                   <div className="hidden sm:block text-left">
                     <div className="text-sm font-medium text-foreground">
-                      {userData.name}
+                      {userData?.name}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {getRoleText(userData.role)}
+                      {getRoleText(userData?.role)}
                     </div>
                   </div>
                 </Button>

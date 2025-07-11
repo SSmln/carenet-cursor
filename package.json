@@ -24,6 +24,7 @@
 		"@tanstack/react-query-devtools": "^5.81.2",
 		"class-variance-authority": "^0.7.0",
 		"clsx": "^2.1.1",
+		"data-fns": "^1.1.0",
 		"date-fns": "^4.1.0",
 		"express": "^5.1.0",
 		"lucide-react": "^0.511.0",
