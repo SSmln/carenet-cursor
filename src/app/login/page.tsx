@@ -69,7 +69,7 @@ export default function LoginPage() {
       Cookies.set("access_token", data.access_token, {
         expires: 1, // 1일 후 만료}
       });
-      router.push("/dashboard");
+      router.push("/cctv");
     },
     onError: (error: Error) => {
       toast.error(`로그인 실패: ${error.message}`);

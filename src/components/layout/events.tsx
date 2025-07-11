@@ -21,30 +21,6 @@ interface AuthMeParams {
   accessToken: string;
 }
 
-const getEvents = async ({
-  accessToken,
-}: AuthMeParams): Promise<Event[] | null> => {
-  if (!accessToken) {
-    console.error("Access token is missing");
-    return null;
-  }
-  const apiUrl =
-    `${process.env.NEXT_PUBLIC_API_URL}` + `/api/v1/events/?skip=0&limit=100`;
-
-  const response = await fetch(apiUrl, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`, // accessToken 사용
-    },
-  });
-  if (!response.ok) {
-    throw new Error("Failed to fetch events");
-  }
-  const data = await response.json();
-  return data;
-};
-
 export const Events = () => {
   const userCookie = Cookies.get("access_token");
   const { stats, events, setStats, setEvents } = useDashboardStore();
@@ -52,9 +28,7 @@ export const Events = () => {
   const { data, isPending, isError } = useQuery<Event[] | null>({
     queryKey: ["Events"],
     queryFn: async () => {
-      const apiUrl =
-        `${process.env.NEXT_PUBLIC_API_URL}` +
-        `/api/v1/events/?skip=0&limit=100`;
+      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}` + `/api/v1/events/`;
 
       const response = await fetch(apiUrl, {
         method: "GET",
@@ -77,6 +51,19 @@ export const Events = () => {
 
   const unhandledEventsCount =
     data?.filter((event: Event) => !event.handled).length || 0;
+
+  const cctvIds = [
+    "6853abdea8c3d423cecc84da",
+    "68639825d1f07bb25c82dee7",
+    "6863982ed1f07bb25c82dee8",
+    "68639835d1f07bb25c82dee9",
+  ];
+
+  const tranferBedIdToIndex = (cctvId: string) => {
+    const index = cctvIds.findIndex((id) => id === cctvId);
+    return index !== -1 ? `${index + 1}번` : "-";
+  };
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -131,21 +118,21 @@ export const Events = () => {
                       "yyyy년 MM월 dd일 HH:mm:ss"
                     )}
                   </p>
-                  <p className="text-xs text-muted-foreground group-hover:text-black">
+                  {/* <p className="text-xs text-muted-foreground group-hover:text-black">
                     베드 ID: {event.bed_id}
-                  </p>
+                  </p> */}
                   <p className="text-xs text-muted-foreground group-hover:text-black">
-                    CCTV ID: {event.cctv_id}
+                    CCTV ID: {tranferBedIdToIndex(event.cctv_id)}
                   </p>
-                  <p className="text-xs text-muted-foreground group-hover:text-black">
+                  {/* <p className="text-xs text-muted-foreground group-hover:text-black">
                     처리됨: {event.handled ? "예" : "아니오"}
-                  </p>
+                  </p> */}
                   {/* 추가 정보가 있다면 여기에 표시 */}
-                  {event.note && (
+                  {/* {event.note && (
                     <p className="text-xs text-muted-foreground group-hover:text-black">
                       메모: {event.note}
                     </p>
-                  )}
+                  )} */}
                   {event.patient_id && (
                     <p className="text-xs text-muted-foreground group-hover:text-black">
                       환자 ID: {event.patient_id}

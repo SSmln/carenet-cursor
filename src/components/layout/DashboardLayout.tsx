@@ -162,7 +162,7 @@ export default function DashboardLayout({
   };
 
   const menuItems = [
-    { href: "/dashboard", icon: IoBarChartOutline, label: "대시보드" },
+    // { href: "/dashboard", icon: IoBarChartOutline, label: "대시보드" },
     { href: "/cctv", icon: IoEyeOutline, label: "CCTV 뷰" },
 
     ...(user?.role === "super_admin" || user?.role === "hospital_admin"
