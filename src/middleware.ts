@@ -21,3 +21,11 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: ["/cctv/:path*", "/login"], // ✅ 로그인 페이지도 감시
 };
+
+
+// list history
+
+
+// method
+
+// 

@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>멀티 스트림 플레이어</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 { text-align: center; color: #333; }
+
+        .main-container {
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 100px);
+        }
+
+        .video-section {
+            flex: 2;
+        }
+
+        .notification-section {
+            flex: 1;
+            min-width: 300px;
+            max-width: 400px;
+        }
+
+        .video-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .video-wrapper {
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        img.mjpeg-stream {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+            background-color: #000;
+        }
+        p { text-align: center; color: #555; }
+        .stream-title { text-align: center; margin-bottom: 5px; font-weight: bold; }
+
+        /* 알림 섹션 스타일 */
+        .notification-panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 15px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .notification-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .notification-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .notification-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .notification-btn.connect {
+            background: #28a745;
+            color: white;
+        }
+
+        .notification-btn.disconnect {
+            background: #dc3545;
+            color: white;
+        }
+
+        .notification-btn.clear {
+            background: #6c757d;
+            color: white;
+        }
+
+        .notification-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .notification-status {
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .notification-status.connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .notification-status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .notification-list {
+            flex: 1;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            padding: 10px;
+            background: #fafafa;
+        }
+
+        .notification-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .notification-item.fall {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+
+        .notification-item.bedsore {
+            border-left-color: #ffc107;
+            background: #fffbf0;
+        }
+
+        .notification-item.error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .notification-header-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .notification-type {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        .notification-time {
+            color: #666;
+            font-size: 11px;
+        }
+
+        .notification-message {
+            font-size: 13px;
+            color: #333;
+            line-height: 1.4;
+        }
+
+        .notification-filters {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .notification-filters label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .notification-filters select {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+
+        .no-notifications {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 1200px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .notification-section {
+                max-width: none;
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>멀티 스트림 플레이어</h1>
+
+    <div class="main-container">
+        <div class="video-section">
+            <div id="streamContainer" class="video-container">
+                <p>스트림 정보 로딩 중...</p>
+            </div>
+        </div>
+
+        <div class="notification-section">
+            <div class="notification-panel">
+                <div class="notification-header">
+                    <div class="notification-title">실시간 알림</div>
+                    <div class="notification-controls">
+                        <button id="connectBtn" class="notification-btn connect">연결</button>
+                        <button id="disconnectBtn" class="notification-btn disconnect" disabled>해제</button>
+                        <button id="clearBtn" class="notification-btn clear">지우기</button>
+                    </div>
+                </div>
+
+                <div id="statusDiv" class="notification-status disconnected">
+                    연결되지 않음
+                </div>
+
+                <div class="notification-filters">
+                    <label for="eventType">이벤트 타입:</label>
+                    <select id="eventType" title="이벤트 타입">
+                        <option value="">모든 이벤트</option>
+                        <option value="fall">낙상</option>
+                        <option value="bedsore">욕창</option>
+                    </select>
+
+                    <label for="status">상태:</label>
+                    <select id="status" title="상태">
+                        <option value="">모든 상태</option>
+                        <option value="pending">대기중</option>
+                        <option value="handled">처리됨</option>
+                    </select>
+                </div>
+
+                <div class="notification-list" id="notificationContainer">
+                    <div class="no-notifications">
+                        알림이 여기에 표시됩니다...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let eventSource = null;
+        let eventCount = 0;
+        let prevStreamStates = {};
+        let afterEventId = null;
+        let hasStreamedLive = false;
+
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const statusDiv = document.getElementById('statusDiv');
+        const notificationContainer = document.getElementById('notificationContainer');
+        const eventTypeSelect = document.getElementById('eventType');
+        const statusSelect = document.getElementById('status');
+
+        function updateStatus(connected) {
+            if (connected) {
+                statusDiv.textContent = '연결됨';
+                statusDiv.className = 'notification-status connected';
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = false;
+            } else {
+                statusDiv.textContent = '연결되지 않음';
+                statusDiv.className = 'notification-status disconnected';
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+            }
+        }
+
+        function addNotification(eventData) {
+            eventCount++;
+
+            const noNotifications = notificationContainer.querySelector('.no-notifications');
+            if (noNotifications) {
+                noNotifications.remove();
+            }
+
+            const notificationDiv = document.createElement('div');
+            notificationDiv.className = `notification-item ${eventData.event_type || 'unknown'}`;
+
+            if (eventData.type === 'error') {
+                notificationDiv.className += ' error';
+            }
+
+            const occurredAt = eventData.occurred_at || eventData.timestamp;
+            const timeStr = new Date(occurredAt).toLocaleString('ko-KR');
+
+            notificationDiv.innerHTML = `
+                <div class="notification-header-item">
+                    <span class="notification-type">${eventData.event_type || eventData.type || 'UNKNOWN'}</span>
+                    <span class="notification-time">${timeStr}</span>
+                </div>
+                <div class="notification-message">
+                    ${eventData.message || eventData.note || '이벤트가 발생했습니다'}
+                </div>
+            `;
+
+            notificationContainer.insertBefore(notificationDiv, notificationContainer.firstChild);
+
+            const notifications = notificationContainer.querySelectorAll('.notification-item');
+            if (notifications.length > 50) {
+                notifications[notifications.length - 1].remove();
+            }
+
+            notificationDiv.style.animation = 'fadeIn 0.5s ease-in';
+        }
+
+        async function fetchLatestEventId() {
+            try {
+                const res = await fetch('/api/v1/events?limit=1');
+                if (!res.ok) return null;
+                const events = await res.json();
+                if (Array.isArray(events) && events.length > 0) {
+                    return events[0].id;
+                }
+            } catch (e) { return null; }
+            return null;
+        }
+
+        async function connect() {
+            // 최초 연결 시 afterEventId가 없으면 최신 이벤트 ID를 받아서 after_id로 사용
+            if (!afterEventId) {
+                afterEventId = await fetchLatestEventId();
+            }
+            const eventType = eventTypeSelect.value;
+            const status = statusSelect.value;
+            let url = '/api/v1/events/stream';
+            const params = new URLSearchParams();
+            if (eventType) params.append('event_type', eventType);
+            if (status) params.append('status', status);
+            if (afterEventId) params.append('after_id', afterEventId);
+            if (params.toString()) {
+                url += '?' + params.toString();
+            }
+            eventSource = new EventSource(url);
+            eventSource.onopen = function(event) {
+                console.log('SSE 연결됨');
+                updateStatus(true);
+            };
+            eventSource.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    addNotification(data);
+                } catch (error) {
+                    console.error('이벤트 데이터 파싱 오류:', error);
+                    addNotification({
+                        type: 'error',
+                        message: '이벤트 데이터 파싱 오류',
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            };
+            eventSource.onerror = function(event) {
+                console.error('SSE 오류:', event);
+                updateStatus(false);
+                addNotification({
+                    type: 'error',
+                    message: '연결 오류가 발생했습니다',
+                    timestamp: new Date().toISOString()
+                });
+            };
+        }
+
+        function disconnect() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+                updateStatus(false);
+            }
+        }
+
+        connectBtn.addEventListener('click', connect);
+        disconnectBtn.addEventListener('click', disconnect);
+
+        clearBtn.addEventListener('click', function() {
+            notificationContainer.innerHTML = '<div class="no-notifications">알림이 여기에 표시됩니다...</div>';
+            eventCount = 0;
+        });
+
+        async function fetchAndDisplayStreams() {
+            const streamContainer = document.getElementById('streamContainer');
+            streamContainer.innerHTML = '<p>스트림 정보 가져오는 중...</p>';
+
+            try {
+                const response = await fetch('/api/v1/stream/public/stream_info_list');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const streams = await response.json();
+
+                if (!streams || streams.length === 0) {
+                    streamContainer.innerHTML = '<p>재생할 스트림이 없습니다.</p>';
+                    prevStreamStates = {};
+                    return;
+                }
+
+                const rtspStreams = streams.filter(stream => stream.type === "RTSP").slice(0, 4);
+
+                let changed = false;
+                const newStates = {};
+                let foundLive = false;
+                rtspStreams.forEach(stream => {
+                    newStates[stream.id] = stream.is_streaming;
+                    if (stream.is_streaming) foundLive = true;
+                    if (prevStreamStates[stream.id] !== stream.is_streaming) {
+                        changed = true;
+                    }
+                });
+                if (Object.keys(prevStreamStates).length !== rtspStreams.length) {
+                    changed = true;
+                }
+
+                if (!hasStreamedLive && foundLive) {
+                    hasStreamedLive = true;
+                    afterEventId = await fetchLatestEventId();
+                }
+
+                if (changed) {
+                    streamContainer.innerHTML = '';
+                    if (rtspStreams.length === 0) {
+                        streamContainer.innerHTML = '<p>표시할 RTSP 스트림이 없습니다.</p>';
+                    } else {
+                        rtspStreams.forEach(stream => {
+                            const wrapper = document.createElement('div');
+                            wrapper.className = 'video-wrapper';
+
+                            const title = document.createElement('div');
+                            title.className = 'stream-title';
+                            title.textContent = `${stream.name || stream.id} (${stream.type})`;
+                            wrapper.appendChild(title);
+
+                            const badge = document.createElement('span');
+                            badge.style.display = 'inline-block';
+                            badge.style.marginBottom = '8px';
+                            badge.style.padding = '2px 8px';
+                            badge.style.borderRadius = '8px';
+                            badge.style.fontSize = '12px';
+                            badge.style.fontWeight = 'bold';
+                            badge.style.color = 'white';
+                            badge.style.marginLeft = '8px';
+                            if (stream.is_streaming) {
+                                badge.textContent = 'LIVE';
+                                badge.style.background = '#28a745';
+                            } else {
+                                badge.textContent = 'OFFLINE';
+                                badge.style.background = '#dc3545';
+                            }
+                            title.appendChild(badge);
+
+                            if (stream.stream_url) {
+                                const imgElement = document.createElement('img');
+                                imgElement.className = 'mjpeg-stream';
+                                imgElement.src = stream.stream_url;
+                                imgElement.alt = `Loading RTSP Stream: ${stream.name}`;
+                                wrapper.appendChild(imgElement);
+                            } else {
+                                const offlineMsg = document.createElement('div');
+                                offlineMsg.style.textAlign = 'center';
+                                offlineMsg.style.color = '#888';
+                                offlineMsg.style.margin = '30px 0';
+                                offlineMsg.textContent = '스트림이 오프라인 상태입니다.';
+                                wrapper.appendChild(offlineMsg);
+                            }
+
+                            streamContainer.appendChild(wrapper);
+                        });
+                    }
+                }
+                prevStreamStates = newStates;
+            } catch (error) {
+                console.error('스트림 정보를 가져오거나 표시하는 데 실패했습니다:', error);
+                streamContainer.innerHTML = `<p>오류 발생: ${error.message}. 콘솔을 확인하세요.</p>`;
+                prevStreamStates = {};
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchAndDisplayStreams();
+        });
+
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(-10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

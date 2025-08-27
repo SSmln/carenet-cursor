@@ -198,6 +198,11 @@ export const MOCK_EVENTS: Event[] = [
 
 // http://210.94.242.37:7423/cctv1/playlist.m3u8
 
+
+"/api/v1/stream/1"
+"/api/v1/stream/2"
+"/api/v1/stream/3"
+"/api/v1/stream/4"
 // 목 CCTV 데이터
 export const MOCK_CCTVS: CCTV[] = [
   {

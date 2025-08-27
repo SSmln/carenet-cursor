@@ -164,7 +164,7 @@ export default function DashboardLayout({
   const menuItems = [
     // { href: "/dashboard", icon: IoBarChartOutline, label: "대시보드" },
     { href: "/cctv", icon: IoEyeOutline, label: "CCTV 뷰" },
-
+    { href: "/manage", icon: IoSettingsOutline, label: "CCTV 관리" },
     ...(user?.role === "super_admin" || user?.role === "hospital_admin"
       ? [{ href: "/admin", icon: IoSettingsOutline, label: "관리자" }]
       : []),
