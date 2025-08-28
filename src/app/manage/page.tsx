@@ -22,33 +22,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useQueries } from "@tanstack/react-query";
+import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
 // import { InfoTable } from "@/components/layout/recentEvents";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormDescription,
+  FormMessage,
+} from "@/components/ui/form";
+import { Bed } from "@/types";
+
+interface DetectedBed extends Bed {
+  _id: string; // 추가
+  bed_id: string;
+  patient_name: string;
+}
+
+const cctvIds = [
+  "6853abdea8c3d423cecc84da",
+  "68639825d1f07bb25c82dee7",
+  "6863982ed1f07bb25c82dee8",
+  "68639835d1f07bb25c82dee9",
+];
 
 export default function ManagePage() {
+  const userCookie = Cookies.get("access_token");
+
   const [gridType, setGridType] = useState("grid-4");
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCCTV, setSelectedCCTV] = useState<{
     id: string;
     streamUrl: string;
   } | null>(null);
-
-  const cctvIds = [
-    "6853abdea8c3d423cecc84da",
-    "68639825d1f07bb25c82dee7",
-    "6863982ed1f07bb25c82dee8",
-    "68639835d1f07bb25c82dee9",
-  ];
-
-  const cctvQueries = useQueries({
-    queries: cctvIds.map((id) => ({
-      queryKey: ["cctvStream", id],
-      queryFn: async () => `/api/stream/${id}`, // Next.js API 라우트 URL 반환
-      staleTime: Infinity, // 스트림 URL은 변하지 않으므로 무한대로 설정
-      gcTime: Infinity,
-    })),
-  });
 
   const openCCTVModal = (id: string, streamUrl: string) => {
     setSelectedCCTV({ id, streamUrl });
@@ -59,6 +67,15 @@ export default function ManagePage() {
     setModalVisible(false);
     setSelectedCCTV(null);
   };
+
+  const cctvQueries = useQueries({
+    queries: cctvIds.map((id) => ({
+      queryKey: ["cctvStream", id],
+      queryFn: async () => `/api/stream/${id}`, // Next.js API 라우트 URL 반환
+      staleTime: Infinity, // 스트림 URL은 변하지 않으므로 무한대로 설정
+      gcTime: Infinity,
+    })),
+  });
 
   // Removed getStatusColor and getStatusText - if needed, they should be implemented elsewhere or from live data
 
@@ -117,6 +134,10 @@ import { Badge } from "@/components/ui/badge";
 import { useEventStream } from "@/hooks/useEventStream";
 import { useQuery } from "@tanstack/react-query";
 import Cookies from "js-cookie"; // 더 이상 직접 사용하지 않으므로 제거
+// import { Form, FormControl } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export const InfoTable = memo(() => {
   const userCookie = Cookies.get("access_token");
@@ -155,173 +176,328 @@ export const InfoTable = memo(() => {
     id: string;
     streamUrl: string;
   } | null>(null);
+  const [bedEmbeddingId, setBedEmbeddingId] = useState("");
+  const [patientNames, setPatientNames] = useState<Map<string, string>>(
+    new Map()
+  );
+  console.log(patientNames, "patientNames");
+  const [bedEmbeddingModalVisible, setBedEmbeddingModalVisible] =
+    useState(false);
 
   const tranferBedIdToIndex = (cctvId: string) => {
     const index = cctvIds.findIndex((id) => id === cctvId);
     return index !== -1 ? `${index + 1}번 CCTV` : "-";
   };
 
-  const openCCTVModal = (id: string, streamUrl: string) => {
-    setSelectedCCTV({ id, streamUrl });
-    setModalVisible(true);
-  };
-
   const handleModalClose = () => {
     setModalVisible(false);
     setSelectedCCTV(null);
   };
-  //   const getEventBadgeVariant = (eventType: string) => {
-  //     switch (eventType) {
-  //       case "fall":
-  //         return "destructive";
-  //       case "bedsore":
-  //         return "warning";
-  //       case "bed_empty":
-  //         return "secondary";
-  //       default:
-  //         return "default";
-  //     }
-  //   };
 
-  //   const transitionEventType = (eventType: string) => {
-  //     switch (eventType) {
-  //       case "fall":
-  //         return "낙상 감지";
-  //       case "bedsore":
-  //         return "욕창 감지";
-  //       case "bed_empty":
-  //         return "침대 비움";
-  //       default:
-  //         return eventType;
-  //     }
-  //   };
+  const [name, setName] = useState("");
+  const [rtspUrl, setRtspUrl] = useState("");
+  const queryClient = useQueryClient();
+  const [patientName, setPatientName] = useState("");
 
-  //   //   const tranferBedIdToIndex = (cctvId: string) => {
-  //   //     const index = cctvIds.findIndex((id) => id === cctvId);
-  //   //     return index !== -1 ? `${index + 1}번` : "-";
-  //   //   };
+  const { mutate: addCamera } = useMutation({
+    mutationKey: ["addCamera"],
+    mutationFn: async () => {
+      const bodyData = {
+        name: name,
+        rtsp_url: rtspUrl,
+      };
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/cctvs`,
+        {
+          method: "POST",
+          body: JSON.stringify(bodyData),
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userCookie}`, // accessToken 사용
+          },
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to add camera");
+      }
+      const data = await response.json();
+      console.log(data);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cctvInfoList"] });
+      console.log("Camera added successfully");
+      setModalVisible(false);
+      setName("");
+      setRtspUrl("");
+    },
+    onError: (error) => {
+      console.error("Failed to add camera:", error);
+    },
+  });
 
-  //   //   const handleEventDetail = (eventId: string) => {
-  //   //     router.push(`/event/${eventId}`);
-  //   //   };
-
-  //   type MappingItem = {
-  //     _id: string; // bed_id
-  //     bed_id: string;
-  //     cctv_id: string;
-  //   };
-
-  //   const cctvBedMappings: MappingItem[] = [
-  //     {
-  //       _id: "6870e80afd301615327cdb4d",
-  //       bed_id: "686b71865604c6f0fde56b24",
-  //       cctv_id: "6853abdea8c3d423cecc84da",
-  //     },
-  //     {
-  //       _id: "6870e815ae6b92ef674d9020",
-  //       bed_id: "686b71865604c6f0fde56b25",
-  //       cctv_id: "6853abdea8c3d423cecc84da",
-  //     },
-  //     {
-  //       _id: "6870e81dcfce7950b565dd99",
-  //       bed_id: "686b7193592328e4e9341948",
-  //       cctv_id: "68639825d1f07bb25c82dee7",
-  //     },
-  //     {
-  //       _id: "6870e824fd301615327cdb4e",
-  //       bed_id: "686b7193592328e4e9341949",
-  //       cctv_id: "68639825d1f07bb25c82dee7",
-  //     },
-  //     {
-  //       _id: "6870e82afd301615327cdb4f",
-  //       bed_id: "686b719d592328e4e934194a",
-  //       cctv_id: "6863982ed1f07bb25c82dee8",
-  //     },
-  //     {
-  //       _id: "6870e831cfce7950b565dd9a",
-  //       bed_id: "686b719d592328e4e934194b",
-  //       cctv_id: "6863982ed1f07bb25c82dee8",
-  //     },
-  //     {
-  //       _id: "6870e837ae6b92ef674d9021",
-  //       bed_id: "686b71a698efe5b5af48f741",
-  //       cctv_id: "68639835d1f07bb25c82dee9",
-  //     },
-  //     {
-  //       _id: "6870e83cae6b92ef674d9022",
-  //       bed_id: "686b71a698efe5b5af48f742",
-  //       cctv_id: "68639835d1f07bb25c82dee9",
-  //     },
-  //   ];
-
-  //   /**
-  //    * CCTV ID + Bed ID 를 받아서 환자번호 (환자1, 환자2 등) 반환
-  //    */
-  //   const getPatientLabel = (cctv_id: string, bed_id: string): string => {
-  //     const mapped = cctvBedMappings.filter((m) => m.cctv_id === cctv_id);
-  //     const index = mapped.findIndex((m) => m.bed_id === bed_id);
-
-  //     if (index === -1) return "-";
-  //     return `환자${index + 1}`;
-  //   };
-
-  const handleAddCamera = () => {
+  const handleAddCameraModal = () => {
+    setModalVisible(true);
+    // setSelectedCCTV(null);
     console.log("add camera");
   };
 
-  //   bed_count
-  //   :
-  //   2
-  //   created_at
-  //   :
-  //   "2025-06-19T15:19:10.364000"
-  //   name
-  //   :
-  //   "cctv1"
-  //   patient_count
-  //   :
-  //   2
-  //   rtsp_url
-  //   :
-  //   "rtsp://mediamtx_rtsp_server:8554/cctv1"
-  //   updated_at
-  //   :
-  //   "2025-08-27T22:07:10.137816"
-  //   _id
-  //   :
-  //   "6853abdea8c3d423cecc84da"
+  const handleAddCamera = () => {
+    if (!name || !rtspUrl) {
+      alert("이름과 주소를 입력해주세요.");
+      return;
+    }
+    addCamera();
+    // muate
+  };
+
+  const handleBedEmbeddingModal = (eventId: string) => {
+    setBedEmbeddingModalVisible(true);
+    // bedEmbedding(eventId);
+    // setSelectedCCTV({ id: eventId, streamUrl: "" });
+    setBedEmbeddingId(eventId);
+    console.log("bed embedding");
+  };
+
+  const handleBedEmbeddingModalClose = () => {
+    setBedEmbeddingModalVisible(false);
+    console.log("bed embedding");
+  };
+
+  const { mutate: deleteList } = useMutation({
+    mutationKey: ["deleteList"],
+    mutationFn: async (id: string) => {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/cctvs/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userCookie}`, // accessToken 사용
+          },
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to delete camera");
+      }
+      const data = await response.json();
+      console.log(data);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cctvInfoList"] });
+      console.log("Camera deleted successfully");
+    },
+    onError: (error) => {
+      console.error("Failed to delete camera:", error);
+    },
+  });
+
+  const handleDeleteCamera = (id: string) => {
+    console.log("delete camera", id);
+    deleteList(id);
+  };
+
+  const {
+    data: bedEmbeddingData,
+    isPending: bedEmbeddingPending,
+    mutate: bedEmbedding,
+  } = useMutation({
+    mutationKey: ["bedEmbedding"],
+    mutationFn: async (id: string) => {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/beds/${id}/auto`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userCookie}`, // accessToken 사용
+          },
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to bed embedding");
+      }
+      const data = await response.json();
+      console.log(data);
+      return data;
+    },
+    onSuccess: (data) => {
+      console.log("Bed embedding successful:", data);
+      const initialPatientNames = new Map<string, string>();
+      data.detected_beds.forEach((bed: any) => {
+        initialPatientNames.set(bed.bed_id, bed.patient_name || "");
+      });
+      setPatientNames(initialPatientNames);
+    },
+    onError: (error) => {
+      console.error("Failed to bed embedding:", error);
+    },
+  });
+
+  //   68639835d1f07bb25c82dee9	cctv4	rtsp://mediamtx_rtsp_server:8554/cctv4
+
+  const { mutate: assignPatient } = useMutation({
+    mutationKey: ["assignPatient"],
+    mutationFn: async (paitent: { bed_id: string; patient_name: string }) => {
+      //   console.log(bodyData, "bodyData");
+      const bedId = paitent.bed_id;
+      const patientName = paitent.patient_name || "";
+
+      // const bodyData = {
+      //   patient_name: patientName,
+      // };
+
+      // console.log(bodyData, "bodyData");
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/beds/${bedId}/assign?patient_name=${encodeURIComponent(patientName)}`,
+        {
+          method: "POST",
+          // body: JSON.stringify(bodyData),
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userCookie}`, // accessToken 사용
+          },
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to assign patient");
+      }
+      const data = await response.json();
+      console.log(data);
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("환자 할당 성공");
+      queryClient.invalidateQueries({ queryKey: ["cctvInfoList"] });
+      setBedEmbeddingModalVisible(false);
+      console.log("Patient assigned successfully");
+    },
+    onError: (error) => {
+      console.error("Failed to assign patient:", error);
+    },
+  });
+
+  const handlePatientAssign = () => {
+    console.log(patientNames, "patientNames");
+    const patientsToAssign = Array.from(patientNames.entries()).map(
+      ([bed_id, patient_name]) => ({
+        bed_id,
+        patient_name,
+      })
+    );
+
+    console.log(patientsToAssign, "patientsToAssign");
+
+    patientsToAssign.forEach((patient) => {
+      if (patient.patient_name.trim() === "") {
+        alert(
+          `환자명이 비어있는 침대(${patient.bed_id})는 할당할 수 없습니다.`
+        );
+        return;
+      }
+      assignPatient(patient);
+    });
+
+    setPatientNames(new Map());
+  };
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between mb-4 pb-2 border-b-2 border-gray-200">
         <h2 className="text-xl font-semibold">CCTV 모니터링</h2>
-        <Button variant="default" size="sm" onClick={handleAddCamera}>
+        <Button variant="default" size="sm" onClick={handleAddCameraModal}>
           + 카메라 추가
         </Button>
+        <Dialog open={modalVisible} onOpenChange={handleModalClose}>
+          <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden ">
+            <DialogHeader className="p-4">
+              <DialogTitle>카메라 추가</DialogTitle>
+              <DialogDescription className="">
+                <form
+                  action=""
+                  className="flex flex-col gap-2 w-full py-12 justify-center items-center"
+                >
+                  <Input
+                    className="w-full max-w-[300px]"
+                    placeholder="이름"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+
+                  <Input
+                    className="w-full max-w-[300px]"
+                    placeholder="CCTV URL"
+                    value={rtspUrl}
+                    onChange={(e) => setRtspUrl(e.target.value)}
+                  />
+
+                  <Button
+                    className="max-w-fit w-full flex justify-center items-center mt-4"
+                    type="submit"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleAddCamera();
+                    }}
+                  >
+                    추가
+                  </Button>
+                </form>
+                {/* 실시간 CCTV 스트리밍 영상입니다. */}
+              </DialogDescription>
+            </DialogHeader>
+          </DialogContent>
+        </Dialog>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>CCTV ID</TableHead>
-              <TableHead>호실(병실)</TableHead>
+              <TableHead className="text-center">호실(병실)</TableHead>
               <TableHead>IP 주소</TableHead>
-              <TableHead>환자수</TableHead>
-              <TableHead>인식침대수</TableHead>
+              <TableHead className="text-center">환자수</TableHead>
+              <TableHead className="text-center">인식침대수</TableHead>
+
+              {/* <TableHead>수정</TableHead> */}
+              <TableHead>삭제</TableHead>
+              <TableHead>상세보기</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {cctvInfoList?.map((event) => (
               <TableRow key={event._id}>
                 <TableCell>{event._id}</TableCell>
-                <TableCell>{event.name}</TableCell>
+                <TableCell className="text-center">{event.name}</TableCell>
                 <TableCell>{event.rtsp_url}</TableCell>
-                <TableCell>{event.patient_count}</TableCell>
+                <TableCell className="text-center">
+                  {event.patient_count}
+                </TableCell>
+                <TableCell className="text-center">{event.bed_count}</TableCell>
+                {/* <TableCell>
+                  <Button
+                    variant="default"
+                    className="p-1 h-auto cursor-pointer"
+                  >
+                    수정
+                  </Button>
+                </TableCell> */}
                 <TableCell>
                   <Button
-                    variant="link"
-                    className="p-0 h-auto cursor-pointer"
-                    // onClick={() => handleEventDetail(event.id)}
+                    variant="default"
+                    className="p-1 h-auto cursor-pointer"
+                    onClick={() => handleDeleteCamera(event._id)}
+                  >
+                    삭제
+                  </Button>
+                </TableCell>
+
+                <TableCell>
+                  <Button
+                    variant="default"
+                    className="p-1 h-auto cursor-pointer"
+                    onClick={() => handleBedEmbeddingModal(event._id)}
+                    // onClick={() => handleDeleteCamera(event.id)}
                   >
                     상세보기
                   </Button>
@@ -332,31 +508,84 @@ export const InfoTable = memo(() => {
         </Table>
       </CardContent>
 
-      <Dialog open={modalVisible} onOpenChange={handleModalClose}>
+      <Dialog
+        open={bedEmbeddingModalVisible}
+        onOpenChange={handleBedEmbeddingModalClose}
+      >
         <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden">
           <DialogHeader className="p-4">
             <DialogTitle>
-              {selectedCCTV ? `CCTV ID: ${selectedCCTV.id} 라이브 스트림` : ""}
+              {/* {selectedCCTV ? `CCTV ID: ${selectedCCTV.id} 라이브 스트림` : ""} */}
             </DialogTitle>
             <DialogDescription>
-              실시간 CCTV 스트리밍 영상입니다.
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => bedEmbedding(bedEmbeddingId)}
+              >
+                침대 인식
+              </Button>
             </DialogDescription>
           </DialogHeader>
-
-          {selectedCCTV && (
-            <div className="bg-black p-2">
-              <div className="mb-2 flex justify-between items-center text-white text-sm">
-                <span>CCTV ID: {tranferBedIdToIndex(selectedCCTV.id)}</span>
+          {/* {bedEmbeddingData && ( */}
+          <div className="w-full h-full">
+            {bedEmbeddingPending ? (
+              <div className="flex justify-center bg-transparent opacity-50 h-[600px] items-center">
+                <Loader2 className="w-10 h-10 animate-spin" />
               </div>
-              <div className="w-full h-full">
+            ) : (
+              bedEmbeddingData && (
                 <img
-                  src={selectedCCTV.streamUrl}
-                  alt={`CCTV ${selectedCCTV.id}`}
-                  className="w-full h-auto object-contain"
+                  src={`data:image/png;base64,${bedEmbeddingData.visualization_image}`}
+                  alt="시각화 이미지"
+                  className="mx-auto"
                 />
-              </div>
-            </div>
-          )}
+              )
+            )}
+
+            <form
+              action=""
+              className="flex flex-col gap-2 w-full py-12 justify-center items-center"
+            >
+              {bedEmbeddingData &&
+                bedEmbeddingData.detected_beds.map((bed: DetectedBed) => (
+                  <div
+                    key={bed._id}
+                    className="flex w-full justify-center items-center gap-2"
+                  >
+                    <span className="w-full max-w-[300px] text-sm text-gray-500 border-1  border-gray-400 rounded-md p-2">
+                      {bed.bed_id}
+                    </span>
+                    <Input
+                      className="w-full max-w-[300px]"
+                      placeholder="환자명"
+                      value={patientNames.get(bed.bed_id) ?? ""}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        const newPatientNames = new Map(patientNames);
+
+                        newPatientNames.set(bed.bed_id, e.target.value);
+
+                        console.log(newPatientNames);
+                        setPatientNames(newPatientNames);
+                      }}
+                    />
+                    {/* <span>{bed.patient_id}</span> */}
+                  </div>
+                ))}
+
+              <Button
+                className="max-w-fit w-full flex justify-center items-center mt-4"
+                type="submit"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handlePatientAssign(patientNames);
+                  //   handleAddCamera();
+                }}
+              >
+                저장
+              </Button>
+            </form>
+          </div>
         </DialogContent>
       </Dialog>
     </Card>
