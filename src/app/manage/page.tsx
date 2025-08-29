@@ -207,7 +207,7 @@ export const InfoTable = memo(() => {
         rtsp_url: rtspUrl,
       };
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/cctvs`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/cctvs/`,
         {
           method: "POST",
           body: JSON.stringify(bodyData),
