@@ -14,7 +14,43 @@ export async function GET(
     return new NextResponse("Unauthorized", { status: 401 });
   }
 
-  const streamApiUrl = `/api/v1/stream/${cctvId}`;
+  // 1. CCTV 상세 정보를 먼저 가져옵니다.
+  let cctvDetails;
+  try {
+    const cctvDetailResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/cctvs/${cctvId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    if (!cctvDetailResponse.ok) {
+      console.error(
+        `Failed to fetch CCTV details for ${cctvId}: ${cctvDetailResponse.status} - ${await cctvDetailResponse.text()}`
+      );
+      return new NextResponse("CCTV not found or access denied", {
+        status: cctvDetailResponse.status,
+      });
+    }
+
+    cctvDetails = await cctvDetailResponse.json();
+  } catch (error) {
+    console.error(`Error fetching CCTV details for ${cctvId}:`, error);
+    return new NextResponse("Internal Server Error during CCTV detail fetch", {
+      status: 500,
+    });
+  }
+
+  if (!cctvDetails || !cctvDetails.rtsp_url) {
+    console.error(`RTSP URL not found for CCTV ID: ${cctvId}`);
+    return new NextResponse("RTSP URL not found", { status: 404 });
+  }
+
+  // 2. 실제 스트리밍 URL을 가져온 rtsp_url로 설정합니다.
+  const streamApiUrl = cctvDetails.rtsp_url;
   // console.log(`Proxying request to: ${streamApiUrl}`);
 
   try {

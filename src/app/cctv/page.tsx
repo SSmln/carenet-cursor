@@ -15,9 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useQueries } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { RecentEvents } from "@/components/layout/recentEvents";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import Cookies from "js-cookie";
 
 export default function CCTVPage() {
   const [gridType, setGridType] = useState("grid-4");
@@ -26,13 +27,35 @@ export default function CCTVPage() {
     id: string;
     streamUrl: string;
   } | null>(null);
+  const [cctvIds, setCctvIds] = useState<string[]>([]);
+  // console.log(cctvIds, "cctvIds");
 
-  const cctvIds = [
-    "6853abdea8c3d423cecc84da",
-    "68639825d1f07bb25c82dee7",
-    "6863982ed1f07bb25c82dee8",
-    "68639835d1f07bb25c82dee9",
-  ];
+  const userCookie = Cookies.get("access_token");
+  const {
+    data: cctvInfoList,
+    isPending,
+    isError,
+  } = useQuery({
+    queryKey: ["cctvInfoList"],
+    queryFn: async () => {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/cctvs/?skip=0&limit=100`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userCookie}`, // accessToken 사용
+          },
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch cctv info list");
+      }
+      const data = await response.json();
+      setCctvIds(data.map((cctv: any) => cctv._id));
+      return data;
+    },
+  });
 
   const cctvQueries = useQueries({
     queries: cctvIds.map((id) => ({

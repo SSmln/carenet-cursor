@@ -1,19 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import { Event } from "@/types";
+import Cookies from "js-cookie";
 
 export const useEventStream = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const eventSourceRef = useRef<EventSource | null>(null);
+  const accessToken = Cookies.get("access_token");
 
   useEffect(() => {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/events/stream`;
     const source = new EventSource(url, { withCredentials: false });
     eventSourceRef.current = source;
 
-    // console.log("[SSE] 연결 시작:", url);
+    console.log("[SSE] 연결 시작:", url);
 
     source.onopen = () => {
-      // console.log("[SSE] 연결 성공");
+      console.log("[SSE] 연결 성공");
     };
 
     source.onmessage = (event) => {

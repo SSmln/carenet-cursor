@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { IoNotificationsOutline } from "react-icons/io5";
 import Cookies from "js-cookie";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
@@ -24,11 +24,40 @@ interface AuthMeParams {
 export const Events = () => {
   const userCookie = Cookies.get("access_token");
   const { stats, events, setStats, setEvents } = useDashboardStore();
+  const [cctvIds, setCctvIds] = useState<string[]>([]);
+
+  // const userCookie = Cookies.get("access_token");
+
+  const {
+    data: cctvInfoList,
+    // isPending,
+    // isError,
+  } = useQuery({
+    queryKey: ["cctvInfoList"],
+    queryFn: async () => {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/cctvs/?skip=0&limit=100`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userCookie}`, // accessToken 사용
+          },
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch cctv info list");
+      }
+      const data = await response.json();
+      setCctvIds(data.map((cctv: any) => cctv._id));
+      return data;
+    },
+  });
 
   const { data, isPending, isError } = useQuery<Event[] | null>({
     queryKey: ["Events"],
     queryFn: async () => {
-      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}` + `/api/v1/events/`;
+      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}` + `/api/v1/events`;
 
       const response = await fetch(apiUrl, {
         method: "GET",
@@ -41,6 +70,7 @@ export const Events = () => {
         throw new Error("Failed to fetch events");
       }
       const data = await response.json();
+      console.log(data, "data");
       setEvents(data);
       return data;
       //   return data;
@@ -51,13 +81,6 @@ export const Events = () => {
 
   const unhandledEventsCount =
     data?.filter((event: Event) => !event.handled).length || 0;
-
-  const cctvIds = [
-    "6853abdea8c3d423cecc84da",
-    "68639825d1f07bb25c82dee7",
-    "6863982ed1f07bb25c82dee8",
-    "68639835d1f07bb25c82dee9",
-  ];
 
   const tranferBedIdToIndex = (cctvId: string) => {
     const index = cctvIds.findIndex((id) => id === cctvId);
