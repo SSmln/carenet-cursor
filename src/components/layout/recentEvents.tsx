@@ -157,7 +157,7 @@ export const RecentEvents = memo(() => {
               <TableHead>발생 시간</TableHead>
               <TableHead>CCTV 번호</TableHead>
               <TableHead>환자</TableHead>
-              <TableHead>액션</TableHead>
+              {/* <TableHead>액션</TableHead> */}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -180,7 +180,7 @@ export const RecentEvents = memo(() => {
                 <TableCell>
                   {getPatientLabel(event.cctv_id, event.bed_id)}
                 </TableCell>
-                <TableCell>
+                {/* <TableCell>
                   <Button
                     variant="link"
                     className="p-0 h-auto cursor-pointer"
@@ -188,7 +188,7 @@ export const RecentEvents = memo(() => {
                   >
                     상세보기
                   </Button>
-                </TableCell>
+                </TableCell> */}
               </TableRow>
             ))}
           </TableBody>
