@@ -37,7 +37,7 @@ export default function CCTVPage() {
   const cctvQueries = useQueries({
     queries: cctvIds.map((id) => ({
       queryKey: ["cctvStream", id],
-      queryFn: async () => `/api/stream/${id}`, // Next.js API 라우트 URL 반환
+      queryFn: async () => `/api/v1/stream/${id}`, // Next.js API 라우트 URL 반환
       staleTime: Infinity, // 스트림 URL은 변하지 않으므로 무한대로 설정
       gcTime: Infinity,
     })),
