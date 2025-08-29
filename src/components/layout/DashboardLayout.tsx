@@ -49,7 +49,7 @@ const getAuthMe = async ({ accessToken }: AuthMeParams) => {
     return null;
   }
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://210.94.242.37:7420";
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   try {
     const response = await fetch(`${apiUrl}/api/v1/auth/me`, {
       // v1으로 수정

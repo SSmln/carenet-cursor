@@ -6,7 +6,7 @@ export const useEventStream = () => {
   const eventSourceRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
-    const url = "http://210.94.242.37:7420/api/v1/events/stream";
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/events/stream`;
     const source = new EventSource(url, { withCredentials: false });
     eventSourceRef.current = source;
 
@@ -52,8 +52,6 @@ export const useEventStream = () => {
   };
 };
 
-
-
 // "6853abdea8c3d423cecc84da",
 // "68639825d1f07bb25c82dee7",
 // "6863982ed1f07bb25c82dee8",
@@ -72,7 +70,6 @@ export const useEventStream = () => {
 //       "bed_id": "686b71865604c6f0fde56b25",
 //       "cctv_id": "6853abdea8c3d423cecc84da",
 //     },
-
 
 //     {
 //       "_id": "6870e81dcfce7950b565dd99",

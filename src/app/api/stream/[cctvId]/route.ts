@@ -6,7 +6,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { cctvId: string } }
 ) {
-  const { cctvId } = await params;
+  const { cctvId } = params;
   const accessToken = (await cookies()).get("access_token")?.value || "";
   console.log("accessToken", accessToken);
   if (!accessToken) {
@@ -14,7 +14,7 @@ export async function GET(
     return new NextResponse("Unauthorized", { status: 401 });
   }
 
-  const streamApiUrl = `http://210.94.242.37:7420/api/v1/stream/${cctvId}`;
+  const streamApiUrl = `/api/v1/stream/${cctvId}`;
   console.log(`Proxying request to: ${streamApiUrl}`);
 
   try {

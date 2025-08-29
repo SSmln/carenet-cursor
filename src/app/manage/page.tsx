@@ -413,37 +413,31 @@ export const InfoTable = memo(() => {
           <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden ">
             <DialogHeader className="p-4">
               <DialogTitle>카메라 추가</DialogTitle>
-              <DialogDescription className="">
-                <form
-                  action=""
-                  className="flex flex-col gap-2 w-full py-12 justify-center items-center"
+              <DialogDescription className="flex flex-col gap-2 w-full py-12 justify-center items-center">
+                <Input
+                  className="w-full max-w-[300px]"
+                  placeholder="이름"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+
+                <Input
+                  className="w-full max-w-[300px]"
+                  placeholder="CCTV URL"
+                  value={rtspUrl}
+                  onChange={(e) => setRtspUrl(e.target.value)}
+                />
+
+                <Button
+                  className="max-w-fit w-full flex justify-center items-center mt-4"
+                  type="submit"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleAddCamera();
+                  }}
                 >
-                  <Input
-                    className="w-full max-w-[300px]"
-                    placeholder="이름"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-
-                  <Input
-                    className="w-full max-w-[300px]"
-                    placeholder="CCTV URL"
-                    value={rtspUrl}
-                    onChange={(e) => setRtspUrl(e.target.value)}
-                  />
-
-                  <Button
-                    className="max-w-fit w-full flex justify-center items-center mt-4"
-                    type="submit"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleAddCamera();
-                    }}
-                  >
-                    추가
-                  </Button>
-                </form>
-                {/* 실시간 CCTV 스트리밍 영상입니다. */}
+                  추가
+                </Button>
               </DialogDescription>
             </DialogHeader>
           </DialogContent>
