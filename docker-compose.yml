@@ -11,7 +11,7 @@ services:
       dockerfile: Dockerfile
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.carenet.rule=Host(`carenet.cemi.re.kr`) || Host(`www.carenet.cemi.re.kr`)"
+      - "traefik.http.routers.carenet.rule=Host(`carenet.cemi.re.kr`)"
       - "traefik.http.routers.carenet.entrypoints=websecure"
       - "traefik.http.routers.carenet.tls.certresolver=cf"
       - "traefik.http.routers.carenet.middlewares=TmNoAiBotsMiddleware@file"
