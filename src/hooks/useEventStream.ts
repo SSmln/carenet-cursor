@@ -10,16 +10,16 @@ export const useEventStream = () => {
     const source = new EventSource(url, { withCredentials: false });
     eventSourceRef.current = source;
 
-    console.log("[SSE] 연결 시작:", url);
+    // console.log("[SSE] 연결 시작:", url);
 
     source.onopen = () => {
-      console.log("[SSE] 연결 성공");
+      // console.log("[SSE] 연결 성공");
     };
 
     source.onmessage = (event) => {
       try {
         const newEvent: Event = JSON.parse(event.data);
-        console.log("[SSE] 새 이벤트 수신:", newEvent);
+        // console.log("[SSE] 새 이벤트 수신:", newEvent);
 
         setEvents((prev) => {
           const updated = [newEvent, ...prev];
@@ -36,13 +36,13 @@ export const useEventStream = () => {
     };
 
     return () => {
-      console.log("[SSE] 연결 종료");
+      // console.log("[SSE] 연결 종료");
       source.close();
     };
   }, []);
 
   const clearEvents = () => {
-    console.log("[SSE] 이벤트 리스트 초기화");
+    //  console.log("[SSE] 이벤트 리스트 초기화");
     setEvents([]);
   };
 

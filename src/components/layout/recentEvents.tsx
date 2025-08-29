@@ -27,7 +27,7 @@ import { useEventStream } from "@/hooks/useEventStream";
 export const RecentEvents = memo(() => {
   const { events, clearEvents } = useEventStream();
   const router = useRouter();
-  console.log(events);
+  // console.log(events);
   const cctvIds = [
     "6853abdea8c3d423cecc84da",
     "68639825d1f07bb25c82dee7",

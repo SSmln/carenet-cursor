@@ -1,0 +1,46 @@
+services:
+  app:
+    container_name: carenet
+    image: carenet:latest
+    env_file:
+      - .env.production
+    ports:
+      - "3000:3000"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.carenet.rule=Host(`teamvaperz.com`) || Host(`www.teamvaperz.com`)"
+      - "traefik.http.routers.carenet.entrypoints=websecure"
+      - "traefik.http.routers.carenet.tls.certresolver=cf"
+      - "traefik.http.routers.carenet.middlewares=TmNoAiBotsMiddleware@file"
+      - "traefik.http.services.carenet.loadbalancer.server.port=3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000/api/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - default
+      - traefik-net
+
+networks:
+  default:
+    driver: bridge
+  traefik-net:
+    external: true

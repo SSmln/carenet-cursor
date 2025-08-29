@@ -164,7 +164,7 @@ export const InfoTable = memo(() => {
         throw new Error("Failed to fetch cctv info list");
       }
       const data = await response.json();
-      console.log(data);
+      // console.log(data);
       return data;
     },
   });
@@ -180,7 +180,7 @@ export const InfoTable = memo(() => {
   const [patientNames, setPatientNames] = useState<Map<string, string>>(
     new Map()
   );
-  console.log(patientNames, "patientNames");
+  // console.log(patientNames, "patientNames");
   const [bedEmbeddingModalVisible, setBedEmbeddingModalVisible] =
     useState(false);
 
@@ -221,12 +221,12 @@ export const InfoTable = memo(() => {
         throw new Error("Failed to add camera");
       }
       const data = await response.json();
-      console.log(data);
+      // console.log(data);
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cctvInfoList"] });
-      console.log("Camera added successfully");
+      // console.log("Camera added successfully");
       setModalVisible(false);
       setName("");
       setRtspUrl("");
@@ -239,7 +239,7 @@ export const InfoTable = memo(() => {
   const handleAddCameraModal = () => {
     setModalVisible(true);
     // setSelectedCCTV(null);
-    console.log("add camera");
+    // console.log("add camera");
   };
 
   const handleAddCamera = () => {
@@ -256,12 +256,12 @@ export const InfoTable = memo(() => {
     // bedEmbedding(eventId);
     // setSelectedCCTV({ id: eventId, streamUrl: "" });
     setBedEmbeddingId(eventId);
-    console.log("bed embedding");
+    // console.log("bed embedding");
   };
 
   const handleBedEmbeddingModalClose = () => {
     setBedEmbeddingModalVisible(false);
-    console.log("bed embedding");
+    // console.log("bed embedding");
   };
 
   const { mutate: deleteList } = useMutation({
@@ -281,12 +281,12 @@ export const InfoTable = memo(() => {
         throw new Error("Failed to delete camera");
       }
       const data = await response.json();
-      console.log(data);
+      // console.log(data);
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cctvInfoList"] });
-      console.log("Camera deleted successfully");
+      // console.log("Camera deleted successfully");
     },
     onError: (error) => {
       console.error("Failed to delete camera:", error);
@@ -294,7 +294,7 @@ export const InfoTable = memo(() => {
   });
 
   const handleDeleteCamera = (id: string) => {
-    console.log("delete camera", id);
+    // console.log("delete camera", id);
     deleteList(id);
   };
 
@@ -319,11 +319,11 @@ export const InfoTable = memo(() => {
         throw new Error("Failed to bed embedding");
       }
       const data = await response.json();
-      console.log(data);
+      // console.log(data);
       return data;
     },
     onSuccess: (data) => {
-      console.log("Bed embedding successful:", data);
+      // console.log("Bed embedding successful:", data);
       const initialPatientNames = new Map<string, string>();
       data.detected_beds.forEach((bed: any) => {
         initialPatientNames.set(bed.bed_id, bed.patient_name || "");
@@ -364,14 +364,14 @@ export const InfoTable = memo(() => {
         throw new Error("Failed to assign patient");
       }
       const data = await response.json();
-      console.log(data);
+      // console.log(data);
       return data;
     },
     onSuccess: () => {
       toast.success("환자 할당 성공");
       queryClient.invalidateQueries({ queryKey: ["cctvInfoList"] });
       setBedEmbeddingModalVisible(false);
-      console.log("Patient assigned successfully");
+      // console.log("Patient assigned successfully");
     },
     onError: (error) => {
       console.error("Failed to assign patient:", error);
@@ -379,7 +379,7 @@ export const InfoTable = memo(() => {
   });
 
   const handlePatientAssign = () => {
-    console.log(patientNames, "patientNames");
+    // console.log(patientNames, "patientNames");
     const patientsToAssign = Array.from(patientNames.entries()).map(
       ([bed_id, patient_name]) => ({
         bed_id,
@@ -387,7 +387,7 @@ export const InfoTable = memo(() => {
       })
     );
 
-    console.log(patientsToAssign, "patientsToAssign");
+    // console.log(patientsToAssign, "patientsToAssign");
 
     patientsToAssign.forEach((patient) => {
       if (patient.patient_name.trim() === "") {
@@ -559,7 +559,7 @@ export const InfoTable = memo(() => {
 
                         newPatientNames.set(bed.bed_id, e.target.value);
 
-                        console.log(newPatientNames);
+                        //    console.log(newPatientNames);
                         setPatientNames(newPatientNames);
                       }}
                     />

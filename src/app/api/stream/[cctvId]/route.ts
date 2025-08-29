@@ -8,14 +8,14 @@ export async function GET(
 ) {
   const { cctvId } = params;
   const accessToken = (await cookies()).get("access_token")?.value || "";
-  console.log("accessToken", accessToken);
+  // console.log("accessToken", accessToken);
   if (!accessToken) {
     console.error("No access token found for stream.");
     return new NextResponse("Unauthorized", { status: 401 });
   }
 
   const streamApiUrl = `/api/v1/stream/${cctvId}`;
-  console.log(`Proxying request to: ${streamApiUrl}`);
+  // console.log(`Proxying request to: ${streamApiUrl}`);
 
   try {
     const response = await fetch(streamApiUrl, {
@@ -25,10 +25,10 @@ export async function GET(
       },
     });
 
-    console.log(`Backend stream response status: ${response.status}`);
-    console.log(
-      `Backend stream response Content-Type: ${response.headers.get("Content-Type")}`
-    );
+    // console.log(`Backend stream response status: ${response.status}`);
+    // console.log(
+    //   `Backend stream response Content-Type: ${response.headers.get("Content-Type")}`
+    // );
 
     if (!response.ok) {
       const errorText = await response.text();
