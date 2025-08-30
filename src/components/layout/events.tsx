@@ -70,7 +70,7 @@ export const Events = () => {
         throw new Error("Failed to fetch events");
       }
       const data = await response.json();
-      console.log(data, "data");
+      // console.log(data, "data");
       setEvents(data);
       return data;
       //   return data;

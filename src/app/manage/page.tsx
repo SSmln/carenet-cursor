@@ -500,7 +500,7 @@ export const InfoTable = memo(() => {
                     className="flex w-full justify-center items-center gap-2"
                   >
                     <span className="w-full max-w-[300px] text-sm text-gray-500 border-1  border-gray-400 rounded-md p-2">
-                      {bed.bed_id}
+                      {bed.bed_name}
                     </span>
                     <Input
                       className="w-full max-w-[300px]"
