@@ -39,7 +39,7 @@ export default function CCTVPage() {
     queryKey: ["cctvInfoList"],
     queryFn: async () => {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/cctvs/?skip=0&limit=100`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/cctvs?skip=0&limit=100`,
         {
           method: "GET",
           headers: {

@@ -49,54 +49,6 @@ const cctvIds = [
 ];
 
 export default function ManagePage() {
-  const userCookie = Cookies.get("access_token");
-
-  const [gridType, setGridType] = useState("grid-4");
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedCCTV, setSelectedCCTV] = useState<{
-    id: string;
-    streamUrl: string;
-  } | null>(null);
-
-  const openCCTVModal = (id: string, streamUrl: string) => {
-    setSelectedCCTV({ id, streamUrl });
-    setModalVisible(true);
-  };
-
-  const handleModalClose = () => {
-    setModalVisible(false);
-    setSelectedCCTV(null);
-  };
-
-  const cctvQueries = useQueries({
-    queries: cctvIds.map((id) => ({
-      queryKey: ["cctvStream", id],
-      queryFn: async () => `/api/stream/${id}`, // Next.js API 라우트 URL 반환
-      staleTime: Infinity, // 스트림 URL은 변하지 않으므로 무한대로 설정
-      gcTime: Infinity,
-    })),
-  });
-
-  // Removed getStatusColor and getStatusText - if needed, they should be implemented elsewhere or from live data
-
-  const getGridLayout = () => {
-    switch (gridType) {
-      case "grid-2":
-        return "grid-cols-1 sm:grid-cols-2";
-      case "grid-4":
-        return "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
-      case "custom":
-        return "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3";
-      default:
-        return "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
-    }
-  };
-
-  const tranferBedIdToIndex = (cctvId: string) => {
-    const index = cctvIds.findIndex((id) => id === cctvId);
-    return index !== -1 ? `${index + 1}번 CCTV` : "-";
-  };
-
   return (
     <DashboardLayout title="CCTV 관리">
       <div className="flex flex-col lg:flex-row gap-6 mb-6">
@@ -151,7 +103,7 @@ export const InfoTable = memo(() => {
     queryKey: ["cctvInfoList"],
     queryFn: async () => {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/cctvs/?skip=0&limit=100`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/cctvs?skip=0&limit=100`,
         {
           method: "GET",
           headers: {
